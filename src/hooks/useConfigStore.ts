@@ -9,7 +9,12 @@ import {
   type OpenClawConfig,
   type ProviderConfig,
 } from '../types/config'
-import { loadConfigSchema, validateOpenClawConfig, type ConfigValidationIssue } from '../lib/configSchema'
+import {
+  loadConfigSchema,
+  validateOpenClawConfig,
+  type ConfigValidationIssue,
+  type ConfigValidationResult,
+} from '../lib/configSchema'
 import { toErrorText, toText } from '../lib/parsers'
 import { useConfigRpc, type RpcCaller } from './useConfigRpc'
 import {
@@ -190,6 +195,75 @@ function getRetryAfterMs(error: unknown): number | null {
  */
 function resolveValidationSchema(schema: Record<string, unknown> | null): Record<string, unknown> | undefined {
   return schema ?? undefined
+}
+
+/**
+ * 判断当前模式下是否应执行前端 Schema 校验。
+ * @param mode 当前读写模式（rpc/local）。
+ * @param schema 远端返回的 Schema。
+ */
+export function shouldRunClientSchemaValidation(
+  mode: ConfigRpcState,
+  _schema: Record<string, unknown> | null,
+): boolean {
+  void _schema
+  return mode === 'local'
+}
+
+/**
+ * 执行配置校验（根据模式自动决定是否跳过前端 Schema 校验）。
+ * @param config 目标配置对象。
+ * @param mode 当前读写模式（rpc/local）。
+ * @param schema 远端返回的 Schema。
+ */
+export function validateConfigForEditor(
+  config: OpenClawConfig,
+  mode: ConfigRpcState,
+  schema: Record<string, unknown> | null,
+): ConfigValidationResult {
+  if (!shouldRunClientSchemaValidation(mode, schema)) {
+    return { valid: true, issues: [] }
+  }
+  return validateOpenClawConfig(config, resolveValidationSchema(schema))
+}
+
+/**
+ * 将未知值解析为校验问题数组。
+ * @param value 待解析值。
+ */
+function normalizeUnknownValidationIssues(value: unknown): ConfigValidationIssue[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap(item => {
+    if (!isRecord(item)) return []
+    const message = toText(item.message)
+    if (!message) return []
+    return [{
+      path: toText(item.path) ?? '(root)',
+      message,
+    }]
+  })
+}
+
+/**
+ * 从 RPC 异常对象中提取服务端返回的配置校验问题。
+ * @param error RPC 异常对象。
+ */
+export function extractConfigValidationIssuesFromRpcError(error: unknown): ConfigValidationIssue[] {
+  if (!isRecord(error)) return []
+
+  const directIssues = normalizeUnknownValidationIssues(error.issues)
+  if (directIssues.length > 0) return directIssues
+
+  const details = isRecord(error.details) ? error.details : null
+  if (!details) return []
+
+  const nestedIssues = normalizeUnknownValidationIssues(details.issues)
+  if (nestedIssues.length > 0) return nestedIssues
+
+  const detailsInsideDetails = isRecord(details.details) ? details.details : null
+  if (!detailsInsideDetails) return []
+
+  return normalizeUnknownValidationIssues(detailsInsideDetails.issues)
 }
 
 /**
@@ -653,15 +727,11 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
               nextSchema = null
             }
 
-            const validation = validateOpenClawConfig(
-              rpcResult.config,
-              resolveValidationSchema(nextSchema),
-            )
             if (loadTaskIdRef.current !== taskId) return false
 
             setConfigState(rpcResult.config)
             setSavedSnapshot(toSnapshot(rpcResult.config))
-            setValidationIssues(rpcResult.issues.length > 0 ? rpcResult.issues : validation.issues)
+            setValidationIssues(rpcResult.issues)
             setConfigHash(rpcResult.hash)
             setRemoteSchema(nextSchema)
             setMode('rpc')
@@ -685,7 +755,7 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
       }
 
       const nextConfig = await loadLocalConfig(path)
-      const validation = validateOpenClawConfig(nextConfig)
+      const validation = validateConfigForEditor(nextConfig, 'local', null)
 
       if (loadTaskIdRef.current !== taskId) return false
 
@@ -813,7 +883,15 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
    * @param nextConfig 新配置对象。
    */
   const setConfig = useCallback((nextConfig: OpenClawConfig) => {
-    setConfigState(normalizeRootConfig(nextConfig))
+    const normalizedConfig = normalizeRootConfig(nextConfig)
+    const validation = validateConfigForEditor(
+      normalizedConfig,
+      modeRef.current,
+      remoteSchemaRef.current,
+    )
+    configRef.current = normalizedConfig
+    setConfigState(normalizedConfig)
+    setValidationIssues(validation.issues)
     setError(null)
   }, [])
 
@@ -822,7 +900,15 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
    * @param updater 更新函数。
    */
   const updateConfig = useCallback((updater: (prev: OpenClawConfig) => OpenClawConfig) => {
-    setConfigState(prev => normalizeRootConfig(updater(prev)))
+    const normalizedConfig = normalizeRootConfig(updater(configRef.current))
+    const validation = validateConfigForEditor(
+      normalizedConfig,
+      modeRef.current,
+      remoteSchemaRef.current,
+    )
+    configRef.current = normalizedConfig
+    setConfigState(normalizedConfig)
+    setValidationIssues(validation.issues)
     setError(null)
   }, [])
 
@@ -831,9 +917,10 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
    */
   const revertConfig = useCallback(() => {
     const revertedConfig = parseSnapshot(savedSnapshotRef.current)
-    const validation = validateOpenClawConfig(
+    const validation = validateConfigForEditor(
       revertedConfig,
-      resolveValidationSchema(remoteSchemaRef.current),
+      modeRef.current,
+      remoteSchemaRef.current,
     )
     setConfigState(revertedConfig)
     setValidationIssues(validation.issues)
@@ -875,7 +962,7 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
     if (writeMode === 'apply') {
       const raw = JSON.stringify(currentConfig, null, 2)
       const result = await applyConfig(raw, baseHash)
-      nextHash = result.hash ?? baseHash
+      nextHash = result.hash ?? ''
     } else {
       const baseConfig = parseSnapshot(savedSnapshotRef.current)
       const mergePatch = createJsonMergePatch(baseConfig, currentConfig)
@@ -885,12 +972,17 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
 
       const raw = JSON.stringify(mergePatch, null, 2)
       const result = await patchConfig(raw, baseHash)
-      nextHash = result.hash ?? baseHash
+      nextHash = result.hash ?? ''
+    }
+
+    if (!nextHash) {
+      const latestConfig = await fetchConfig()
+      nextHash = latestConfig?.hash ?? baseHash
     }
 
     setMode('rpc')
     setConfigHash(nextHash)
-  }, [applyConfig, patchConfig])
+  }, [applyConfig, fetchConfig, patchConfig])
 
   /**
    * 保存配置（保存前执行 schema 校验）。
@@ -902,14 +994,15 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
     const path = configPathRef.current.trim()
     const baseConfig = parseSnapshot(savedSnapshotRef.current)
     const currentConfig = applyProviderUserAgentOverride(baseConfig, configRef.current)
-    const validation = validateOpenClawConfig(
+    const validation = validateConfigForEditor(
       currentConfig,
-      resolveValidationSchema(remoteSchemaRef.current),
+      isRpcAvailable ? 'rpc' : 'local',
+      remoteSchemaRef.current,
     )
     setValidationIssues(validation.issues)
 
     if (!validation.valid) {
-      setError('保存失败：配置校验未通过，请先修复表单错误')
+      setError('保存失败：配置校验未通过，请先修复配置错误')
       return false
     }
 
@@ -937,6 +1030,13 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
       if (isConfigHashConflict(saveError)) {
         setError('保存失败：配置已被其他端修改，请重新加载后重试')
         setPendingReloadMessage('配置已被其他端修改，是否立即重新加载？')
+        return false
+      }
+
+      const serverValidationIssues = extractConfigValidationIssuesFromRpcError(saveError)
+      if (serverValidationIssues.length > 0) {
+        setValidationIssues(serverValidationIssues)
+        setError('保存失败：配置校验未通过，请先修复配置问题')
         return false
       }
 

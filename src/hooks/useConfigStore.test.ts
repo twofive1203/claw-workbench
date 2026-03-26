@@ -8,7 +8,13 @@ import {
   DEFAULT_PROVIDER_USER_AGENT_HEADER_NAME,
   DEFAULT_PROVIDER_USER_AGENT_HEADER_VALUE,
 } from '../types/config'
-import { applyProviderUserAgentOverride, createJsonMergePatch } from './useConfigStore'
+import {
+  applyProviderUserAgentOverride,
+  createJsonMergePatch,
+  extractConfigValidationIssuesFromRpcError,
+  shouldRunClientSchemaValidation,
+  validateConfigForEditor,
+} from './useConfigStore'
 
 describe('createJsonMergePatch', () => {
   it('生成嵌套对象的 merge patch', () => {
@@ -132,5 +138,53 @@ describe('applyProviderUserAgentOverride', () => {
         },
       },
     })
+  })
+})
+
+describe('shouldRunClientSchemaValidation', () => {
+  it('本地模式始终启用前端 schema 校验', () => {
+    expect(shouldRunClientSchemaValidation('local', null)).toBe(true)
+  })
+
+  it('RPC 模式且无远端 schema 时跳过前端校验', () => {
+    expect(shouldRunClientSchemaValidation('rpc', null)).toBe(false)
+  })
+
+  it('RPC 模式即使存在远端 schema 也跳过前端校验', () => {
+    expect(shouldRunClientSchemaValidation('rpc', { type: 'object' })).toBe(false)
+  })
+})
+
+describe('validateConfigForEditor', () => {
+  it('RPC 模式缺少远端 schema 时跳过前端校验', () => {
+    const result = validateConfigForEditor({
+      gateway: {
+        port: '18789' as unknown as number,
+      },
+    }, 'rpc', null)
+
+    expect(result).toEqual({
+      valid: true,
+      issues: [],
+    })
+  })
+})
+
+describe('extractConfigValidationIssuesFromRpcError', () => {
+  it('支持从 error.details.details.issues 提取服务端校验问题', () => {
+    const issues = extractConfigValidationIssuesFromRpcError({
+      code: 'INVALID_REQUEST',
+      details: {
+        details: {
+          issues: [
+            { path: 'gateway.bind', message: 'must be string' },
+          ],
+        },
+      },
+    })
+
+    expect(issues).toEqual([
+      { path: 'gateway.bind', message: 'must be string' },
+    ])
   })
 })
