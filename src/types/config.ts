@@ -42,9 +42,49 @@ export type LoggingConsoleStyle = 'pretty' | 'compact' | 'json' | string
 export type LoggingRedactSensitive = 'off' | 'tools' | string
 
 /**
+ * 配置中的群聊策略类型。
+ */
+export type ChannelGroupPolicy = 'open' | 'disabled' | 'allowlist' | string
+
+/**
  * 配置中的通道对端类型。
  */
 export type BindingPeerKind = 'direct' | 'group' | 'channel' | 'dm' | string
+
+/**
+ * Gateway 运行模式类型。
+ */
+export type GatewayMode = 'local' | 'remote' | string
+
+/**
+ * Gateway 监听绑定类型。
+ */
+export type GatewayBindMode = 'auto' | 'lan' | 'loopback' | 'custom' | 'tailnet' | string
+
+/**
+ * Gateway 认证模式类型。
+ */
+export type GatewayAuthMode = 'none' | 'token' | 'password' | 'trusted-proxy' | string
+
+/**
+ * Gateway 热重载模式类型。
+ */
+export type GatewayReloadMode = 'off' | 'restart' | 'hot' | 'hybrid' | string
+
+/**
+ * Gateway Tailscale 模式类型。
+ */
+export type GatewayTailscaleMode = 'off' | 'serve' | 'funnel' | string
+
+/**
+ * Wizard 最近运行模式类型。
+ */
+export type WizardLastRunMode = 'local' | 'remote' | string
+
+/**
+ * 配置中的密文字段值类型。
+ */
+export type ConfigSecretValue = string | Record<string, unknown>
 
 /**
  * Provider 模型成本结构。
@@ -289,6 +329,330 @@ export interface LoggingConfig {
 }
 
 /**
+ * 插件加载配置结构。
+ * @param paths 额外插件扫描路径。
+ */
+export interface PluginsLoadConfig {
+  paths?: string[]
+  [key: string]: unknown
+}
+
+/**
+ * 插件槽位配置结构。
+ * @param memory 记忆槽位绑定的插件 ID。
+ * @param contextEngine 上下文引擎槽位绑定的插件 ID。
+ */
+export interface PluginSlotsConfig {
+  memory?: string
+  contextEngine?: string
+  [key: string]: unknown
+}
+
+/**
+ * 单个插件 Hook 配置结构。
+ * @param allowPromptInjection 是否允许提示词注入。
+ */
+export interface PluginEntryHooksConfig {
+  allowPromptInjection?: boolean
+  [key: string]: unknown
+}
+
+/**
+ * 单个插件子代理配置结构。
+ * @param allowModelOverride 是否允许插件请求模型覆盖。
+ * @param allowedModels 允许覆盖到的模型列表。
+ */
+export interface PluginEntrySubagentConfig {
+  allowModelOverride?: boolean
+  allowedModels?: string[]
+  [key: string]: unknown
+}
+
+/**
+ * 单个插件条目配置结构。
+ * @param enabled 是否启用该插件。
+ * @param hooks 插件 Hook 配置。
+ * @param subagent 插件子代理配置。
+ * @param config 插件自定义配置。
+ */
+export interface PluginEntryConfig {
+  enabled?: boolean
+  hooks?: PluginEntryHooksConfig
+  subagent?: PluginEntrySubagentConfig
+  config?: Record<string, unknown>
+  [key: string]: unknown
+}
+
+/**
+ * 插件总配置。
+ * @param enabled 是否启用插件系统。
+ * @param allow 插件允许列表。
+ * @param deny 插件拒绝列表。
+ * @param load 插件加载配置。
+ * @param slots 插件槽位配置。
+ * @param entries 单插件配置表。
+ * @param installs 插件安装记录。
+ */
+export interface PluginsConfig {
+  enabled?: boolean
+  allow?: string[]
+  deny?: string[]
+  load?: PluginsLoadConfig
+  slots?: PluginSlotsConfig
+  entries?: Record<string, PluginEntryConfig>
+  installs?: Record<string, Record<string, unknown>>
+  [key: string]: unknown
+}
+
+/**
+ * 通道心跳可见性配置结构。
+ * @param showOk 是否显示正常心跳消息。
+ * @param showAlerts 是否显示告警内容。
+ * @param useIndicator 是否发出 UI 指示器事件。
+ */
+export interface ChannelHeartbeatVisibilityConfig {
+  showOk?: boolean
+  showAlerts?: boolean
+  useIndicator?: boolean
+  [key: string]: unknown
+}
+
+/**
+ * 通道默认配置结构。
+ * @param groupPolicy 默认群聊策略。
+ * @param heartbeat 默认心跳展示配置。
+ */
+export interface ChannelDefaultsConfig {
+  groupPolicy?: ChannelGroupPolicy
+  heartbeat?: ChannelHeartbeatVisibilityConfig
+  [key: string]: unknown
+}
+
+/**
+ * 按 provider/channel 的模型覆盖映射。
+ */
+export type ChannelModelByChannelConfig = Record<string, Record<string, string>>
+
+/**
+ * 通道总配置。
+ * @param defaults 通道默认配置。
+ * @param modelByChannel provider/channel 模型覆盖映射。
+ */
+export interface ChannelsConfig {
+  defaults?: ChannelDefaultsConfig
+  modelByChannel?: ChannelModelByChannelConfig
+  [key: string]: unknown
+}
+
+/**
+ * Gateway Control UI 配置结构。
+ * @param enabled 是否启用内置控制台界面。
+ * @param basePath 控制台基础路径前缀。
+ * @param root 控制台静态资源目录。
+ * @param allowedOrigins WebSocket/浏览器允许来源。
+ * @param dangerouslyAllowHostHeaderOriginFallback 是否允许 Host 头兜底来源判断。
+ * @param allowInsecureAuth 是否允许不安全认证。
+ * @param dangerouslyDisableDeviceAuth 是否禁用设备身份校验。
+ */
+export interface GatewayControlUiConfig {
+  enabled?: boolean
+  basePath?: string
+  root?: string
+  allowedOrigins?: string[]
+  dangerouslyAllowHostHeaderOriginFallback?: boolean
+  allowInsecureAuth?: boolean
+  dangerouslyDisableDeviceAuth?: boolean
+  [key: string]: unknown
+}
+
+/**
+ * Gateway 认证限流配置结构。
+ * @param maxAttempts 最大失败次数。
+ * @param windowMs 统计窗口时长（毫秒）。
+ * @param lockoutMs 锁定时长（毫秒）。
+ * @param exemptLoopback 是否豁免 loopback 地址。
+ */
+export interface GatewayAuthRateLimitConfig {
+  maxAttempts?: number
+  windowMs?: number
+  lockoutMs?: number
+  exemptLoopback?: boolean
+  [key: string]: unknown
+}
+
+/**
+ * Gateway 受信代理配置结构。
+ * @param userHeader 代理透传的用户头。
+ * @param requiredHeaders 必须存在的代理头。
+ * @param allowUsers 允许访问的用户列表。
+ */
+export interface GatewayTrustedProxyConfig {
+  userHeader?: string
+  requiredHeaders?: string[]
+  allowUsers?: string[]
+  [key: string]: unknown
+}
+
+/**
+ * Gateway 认证配置结构。
+ * @param mode 认证模式。
+ * @param token token 模式密钥。
+ * @param password password 模式密码。
+ * @param allowTailscale 是否允许 Tailscale 身份头。
+ * @param rateLimit 失败认证限流配置。
+ * @param trustedProxy 受信代理配置。
+ */
+export interface GatewayAuthConfig {
+  mode?: GatewayAuthMode
+  token?: ConfigSecretValue
+  password?: ConfigSecretValue
+  allowTailscale?: boolean
+  rateLimit?: GatewayAuthRateLimitConfig
+  trustedProxy?: GatewayTrustedProxyConfig
+  [key: string]: unknown
+}
+
+/**
+ * Gateway Tailscale 配置结构。
+ * @param mode 暴露模式。
+ * @param resetOnExit 退出时是否重置配置。
+ */
+export interface GatewayTailscaleConfig {
+  mode?: GatewayTailscaleMode
+  resetOnExit?: boolean
+  [key: string]: unknown
+}
+
+/**
+ * Gateway 远端连接配置结构。
+ * @param enabled 是否启用远端网关模式。
+ * @param url 远端网关地址。
+ * @param transport 远端传输方式。
+ * @param token 远端 token。
+ * @param password 远端密码。
+ * @param tlsFingerprint 期望的 TLS 指纹。
+ * @param sshTarget SSH 隧道目标。
+ * @param sshIdentity SSH 身份文件路径。
+ */
+export interface GatewayRemoteConfig {
+  enabled?: boolean
+  url?: string
+  transport?: 'ssh' | 'direct' | string
+  token?: ConfigSecretValue
+  password?: ConfigSecretValue
+  tlsFingerprint?: string
+  sshTarget?: string
+  sshIdentity?: string
+  [key: string]: unknown
+}
+
+/**
+ * Gateway 重载配置结构。
+ * @param mode 重载模式。
+ * @param debounceMs 配置变更防抖时间。
+ * @param deferralTimeoutMs 强制重启前等待在途任务结束的超时。
+ */
+export interface GatewayReloadConfig {
+  mode?: GatewayReloadMode
+  debounceMs?: number
+  deferralTimeoutMs?: number
+  [key: string]: unknown
+}
+
+/**
+ * Gateway TLS 配置结构。
+ * @param enabled 是否启用 TLS。
+ * @param autoGenerate 是否自动生成证书。
+ * @param certPath 证书路径。
+ * @param keyPath 私钥路径。
+ * @param caPath CA 证书路径。
+ */
+export interface GatewayTlsConfig {
+  enabled?: boolean
+  autoGenerate?: boolean
+  certPath?: string
+  keyPath?: string
+  caPath?: string
+  [key: string]: unknown
+}
+
+/**
+ * Gateway 总配置。
+ * @param port Gateway 监听端口。
+ * @param mode Gateway 运行模式。
+ * @param bind Gateway 绑定策略。
+ * @param customBindHost 自定义绑定地址。
+ * @param controlUi Control UI 配置。
+ * @param auth 认证配置。
+ * @param tailscale Tailscale 配置。
+ * @param remote 远端连接配置。
+ * @param reload 热重载配置。
+ * @param tls TLS 配置。
+ * @param trustedProxies 受信代理 IP 列表。
+ * @param allowRealIpFallback 是否允许 x-real-ip 兜底。
+ * @param channelHealthCheckMinutes 通道健康检查周期（分钟）。
+ * @param channelStaleEventThresholdMinutes 通道事件陈旧阈值（分钟）。
+ * @param channelMaxRestartsPerHour 每小时最大自动重启次数。
+ */
+export interface GatewayConfig {
+  port?: number
+  mode?: GatewayMode
+  bind?: GatewayBindMode
+  customBindHost?: string
+  controlUi?: GatewayControlUiConfig
+  auth?: GatewayAuthConfig
+  tailscale?: GatewayTailscaleConfig
+  remote?: GatewayRemoteConfig
+  reload?: GatewayReloadConfig
+  tls?: GatewayTlsConfig
+  trustedProxies?: string[]
+  allowRealIpFallback?: boolean
+  channelHealthCheckMinutes?: number
+  channelStaleEventThresholdMinutes?: number
+  channelMaxRestartsPerHour?: number
+  [key: string]: unknown
+}
+
+/**
+ * UI 助手展示配置结构。
+ * @param name 助手显示名称。
+ * @param avatar 助手头像。
+ */
+export interface UiAssistantConfig {
+  name?: string
+  avatar?: string
+  [key: string]: unknown
+}
+
+/**
+ * UI 配置结构。
+ * @param seamColor 界面强调色。
+ * @param assistant 助手展示配置。
+ */
+export interface UiConfig {
+  seamColor?: string
+  assistant?: UiAssistantConfig
+  [key: string]: unknown
+}
+
+/**
+ * 初始化向导配置结构。
+ * @param lastRunAt 最近运行时间。
+ * @param lastRunVersion 最近运行版本。
+ * @param lastRunCommit 最近运行提交。
+ * @param lastRunCommand 最近运行命令。
+ * @param lastRunMode 最近运行模式。
+ */
+export interface WizardConfig {
+  lastRunAt?: string
+  lastRunVersion?: string
+  lastRunCommit?: string
+  lastRunCommand?: string
+  lastRunMode?: WizardLastRunMode
+  [key: string]: unknown
+}
+
+/**
  * 通道绑定对端匹配结构。
  * @param kind 对端类型。
  * @param id 对端 ID。
@@ -325,14 +689,24 @@ export interface BindingConfig {
 
 /**
  * OpenClaw 主配置结构。
+ * @param wizard 初始化向导信息。
+ * @param ui UI 展示配置。
+ * @param plugins 插件配置。
  * @param models 模型配置。
  * @param agents Agent 配置。
+ * @param channels 通道配置。
+ * @param gateway Gateway 配置。
  * @param logging 日志配置。
  * @param bindings 通道绑定配置。
  */
 export interface OpenClawConfig {
+  wizard?: WizardConfig
+  ui?: UiConfig
+  plugins?: PluginsConfig
   models?: ModelsConfig
   agents?: AgentsConfig
+  channels?: ChannelsConfig
+  gateway?: GatewayConfig
   logging?: LoggingConfig
   bindings?: BindingConfig[]
   [key: string]: unknown

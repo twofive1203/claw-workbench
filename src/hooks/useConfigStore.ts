@@ -1,3 +1,4 @@
+import JSON5 from 'json5'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createEmptyConfig,
@@ -143,6 +144,7 @@ function formatRpcLoadError(error: unknown): string {
       hint = 'Gateway 返回缺少 hash，无法安全读取配置，请升级网关或客户端'
     } else if (
       rawMessage.includes('config.get 返回 raw 非 JSON')
+      || rawMessage.includes('config.get 返回 raw 非 JSON5')
       || lowerMessage.includes('unexpected token')
       || lowerMessage.includes('json parse')
     ) {
@@ -180,6 +182,31 @@ function getRetryAfterMs(error: unknown): number | null {
     return error.retryAfterMs
   }
   return null
+}
+
+/**
+ * 解析当前应使用的配置校验 Schema。
+ * @param schema 远端返回的 Schema。
+ */
+function resolveValidationSchema(schema: Record<string, unknown> | null): Record<string, unknown> | undefined {
+  return schema ?? undefined
+}
+
+/**
+ * 判断是否属于配置 hash 冲突，需要重新加载。
+ * @param error RPC 保存错误。
+ */
+function isConfigHashConflict(error: unknown): boolean {
+  const code = getRpcErrorCode(error)
+  if (code === 'CONFLICT') return true
+  if (code !== 'INVALID_REQUEST') return false
+
+  const message = toErrorText(error).toLowerCase()
+  return (
+    message.includes('config changed since last load')
+    || message.includes('config base hash required')
+    || message.includes('config base hash unavailable')
+  )
 }
 
 /**
@@ -390,6 +417,7 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
   const [error, setError] = useState<string | null>(null)
   const [configHash, setConfigHash] = useState<string | null>(null)
   const [pendingReloadMessage, setPendingReloadMessage] = useState<string | null>(null)
+  const [remoteSchema, setRemoteSchema] = useState<Record<string, unknown> | null>(null)
 
   const storeRef = useRef<{ get<T>(key: string): Promise<T | undefined>; set(key: string, value: unknown): Promise<void> } | null>(null)
   const configPathRef = useRef('')
@@ -397,13 +425,14 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
   const configRef = useRef<OpenClawConfig>(createEmptyConfig())
   const savedSnapshotRef = useRef(toSnapshot(createEmptyConfig()))
   const configHashRef = useRef<string | null>(null)
+  const remoteSchemaRef = useRef<Record<string, unknown> | null>(null)
   const activeServerKeyRef = useRef(activeServerId ?? DEFAULT_SERVER_KEY)
   const previousServerKeyRef = useRef(activeServerId ?? DEFAULT_SERVER_KEY)
   const preferRpcOnNextLoadRef = useRef(false)
   const loadTaskIdRef = useRef(0)
   const rpcReadyRef = useRef(isConnected)
 
-  const { isRpcAvailable, fetchConfig, patchConfig, applyConfig } = useConfigRpc({
+  const { isRpcAvailable, fetchConfig, fetchConfigSchema, patchConfig, applyConfig } = useConfigRpc({
     callRpc,
     isConnected,
   })
@@ -461,6 +490,14 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
   useEffect(() => {
     configHashRef.current = configHash
   }, [configHash])
+
+  /**
+   * 同步远端 Schema 到 ref。
+   * @param nextSchema 最新远端 Schema。
+   */
+  useEffect(() => {
+    remoteSchemaRef.current = remoteSchema
+  }, [remoteSchema])
 
   /**
    * 同步当前服务器 key 到 ref。
@@ -557,7 +594,7 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
     if (!fileExists) return createEmptyConfig()
 
     const rawText = await readTextFile(path)
-    const parsedConfig = rawText.trim() ? JSON.parse(rawText) : createEmptyConfig()
+    const parsedConfig = rawText.trim() ? JSON5.parse(rawText) : createEmptyConfig()
     return normalizeRootConfig(parsedConfig)
   }, [])
 
@@ -584,10 +621,6 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
    */
   const loadConfig = useCallback(async (targetPath?: string): Promise<boolean> => {
     const path = (targetPath ?? configPathRef.current).trim()
-    if (!path) {
-      setError('配置文件路径为空')
-      return false
-    }
 
     const taskId = loadTaskIdRef.current + 1
     loadTaskIdRef.current = taskId
@@ -612,13 +645,25 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
         try {
           const rpcResult = await fetchConfig()
           if (rpcResult) {
-            const validation = validateOpenClawConfig(rpcResult.config)
+            let nextSchema: Record<string, unknown> | null = null
+            try {
+              const schemaResult = await fetchConfigSchema()
+              nextSchema = schemaResult?.schema ?? null
+            } catch {
+              nextSchema = null
+            }
+
+            const validation = validateOpenClawConfig(
+              rpcResult.config,
+              resolveValidationSchema(nextSchema),
+            )
             if (loadTaskIdRef.current !== taskId) return false
 
             setConfigState(rpcResult.config)
             setSavedSnapshot(toSnapshot(rpcResult.config))
-            setValidationIssues(validation.issues)
+            setValidationIssues(rpcResult.issues.length > 0 ? rpcResult.issues : validation.issues)
             setConfigHash(rpcResult.hash)
+            setRemoteSchema(nextSchema)
             setMode('rpc')
             preferRpcOnNextLoadRef.current = false
             return true
@@ -626,6 +671,17 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
         } catch (rpcError) {
           rpcLoadError = formatRpcLoadError(rpcError)
         }
+      }
+
+      if (!path) {
+        if (loadTaskIdRef.current !== taskId) return false
+
+        setRemoteSchema(null)
+        setConfigHash(null)
+        setMode('local')
+        preferRpcOnNextLoadRef.current = false
+        setError(rpcLoadError ? `RPC 加载失败，且未配置本地文件: ${rpcLoadError}` : '配置文件路径为空')
+        return false
       }
 
       const nextConfig = await loadLocalConfig(path)
@@ -637,6 +693,7 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
       setSavedSnapshot(toSnapshot(nextConfig))
       setValidationIssues(validation.issues)
       setConfigHash(null)
+      setRemoteSchema(null)
       const shouldKeepRpcMode = loadStrategy.shouldKeepRpcModeAfterLocalFallback
 
       if (!shouldKeepRpcMode) {
@@ -656,16 +713,17 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
         setIsLoading(false)
       }
     }
-  }, [fetchConfig, loadLocalConfig, waitForRpcAvailable])
+  }, [fetchConfig, fetchConfigSchema, loadLocalConfig, waitForRpcAvailable])
 
   /**
    * 当路径变化时自动读取配置。
    * @param path 当前路径。
    */
   useEffect(() => {
-    if (!ready || !configPath) return
+    if (!ready) return
+    if (!configPath && !isRpcAvailable) return
     void loadConfig(configPath)
-  }, [configPath, loadConfig, ready])
+  }, [configPath, isRpcAvailable, loadConfig, ready])
 
   /**
    * 监听 RPC 可用性变化，断连延迟切本地、重连切回 RPC。
@@ -733,7 +791,7 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
       const selected = await open({
         title: '选择 openclaw 配置文件',
         defaultPath: configPathRef.current || defaultConfigPath || undefined,
-        filters: [{ name: 'JSON', extensions: ['json'] }],
+        filters: [{ name: 'JSON/JSON5', extensions: ['json', 'json5'] }],
         multiple: false,
         directory: false,
       })
@@ -773,7 +831,10 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
    */
   const revertConfig = useCallback(() => {
     const revertedConfig = parseSnapshot(savedSnapshotRef.current)
-    const validation = validateOpenClawConfig(revertedConfig)
+    const validation = validateOpenClawConfig(
+      revertedConfig,
+      resolveValidationSchema(remoteSchemaRef.current),
+    )
     setConfigState(revertedConfig)
     setValidationIssues(validation.issues)
     setError(null)
@@ -841,7 +902,10 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
     const path = configPathRef.current.trim()
     const baseConfig = parseSnapshot(savedSnapshotRef.current)
     const currentConfig = applyProviderUserAgentOverride(baseConfig, configRef.current)
-    const validation = validateOpenClawConfig(currentConfig)
+    const validation = validateOpenClawConfig(
+      currentConfig,
+      resolveValidationSchema(remoteSchemaRef.current),
+    )
     setValidationIssues(validation.issues)
 
     if (!validation.valid) {
@@ -870,14 +934,13 @@ export function useConfigStore(options: UseConfigStoreOptions): UseConfigStoreRe
       setSavedSnapshot(toSnapshot(currentConfig))
       return true
     } catch (saveError) {
-      const errorCode = getRpcErrorCode(saveError)
-
-      if (errorCode === 'CONFLICT') {
+      if (isConfigHashConflict(saveError)) {
         setError('保存失败：配置已被其他端修改，请重新加载后重试')
         setPendingReloadMessage('配置已被其他端修改，是否立即重新加载？')
         return false
       }
 
+      const errorCode = getRpcErrorCode(saveError)
       if (errorCode === 'UNAVAILABLE') {
         const retryAfterMs = getRetryAfterMs(saveError)
         if (retryAfterMs && retryAfterMs > 0) {

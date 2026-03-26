@@ -1,5 +1,18 @@
 import { useMemo, useRef, useState } from 'react'
-import { Boxes, Bot, Cable, Cog, FileCode2, Loader2, Sparkles } from 'lucide-react'
+import {
+  Boxes,
+  Bot,
+  Cable,
+  Clock3,
+  Cog,
+  FileCode2,
+  Loader2,
+  Network,
+  Palette,
+  Server,
+  Sparkles,
+  Wrench,
+} from 'lucide-react'
 import type { ConfigValidationIssue } from '../../lib/configSchema'
 import type { ConfigRpcState, OpenClawConfig } from '../../types/config'
 import type { SaveConfigOptions } from '../../hooks/useConfigStore'
@@ -11,15 +24,31 @@ import { ConfirmModal } from '../ConfirmModal'
 import { AgentDefaultsSection } from './sections/AgentDefaultsSection'
 import { AgentListSection } from './sections/AgentListSection'
 import { BindingsSection } from './sections/BindingsSection'
+import { ChannelsSection } from './sections/ChannelsSection'
+import { GatewaySection } from './sections/GatewaySection'
 import { LoggingSection } from './sections/LoggingSection'
 import { ModelsSection } from './sections/ModelsSection'
+import { PluginsSection } from './sections/PluginsSection'
 import { SkillsSection } from './sections/SkillsSection'
+import { UiSection } from './sections/UiSection'
+import { WizardSection } from './sections/WizardSection'
 import { type ThemeId } from '../../data/themes'
 import { useLocalizedSubtree } from '../../i18n/useLocalizedSubtree'
 import { useI18n } from '../../i18n/useI18n'
 import { LanguageSwitcher } from '../LanguageSwitcher'
 
-type ConfigTabId = 'models' | 'agents' | 'agentDefaults' | 'logging' | 'bindings' | 'skills'
+type ConfigTabId =
+  | 'models'
+  | 'agents'
+  | 'agentDefaults'
+  | 'plugins'
+  | 'channels'
+  | 'gateway'
+  | 'ui'
+  | 'wizard'
+  | 'logging'
+  | 'bindings'
+  | 'skills'
 
 /**
  * 配置面板依赖的 store 结构。
@@ -74,6 +103,11 @@ const TAB_ITEMS = [
   { id: 'models', labelKey: 'config.tab.models', icon: Boxes, issuePathPrefix: 'models' },
   { id: 'agents', labelKey: 'config.tab.agents', icon: Bot, issuePathPrefix: 'agents.list' },
   { id: 'agentDefaults', labelKey: 'config.tab.agent_defaults', icon: Cog, issuePathPrefix: 'agents.defaults' },
+  { id: 'plugins', labelKey: 'config.tab.plugins', icon: Wrench, issuePathPrefix: 'plugins' },
+  { id: 'channels', labelKey: 'config.tab.channels', icon: Network, issuePathPrefix: 'channels' },
+  { id: 'gateway', labelKey: 'config.tab.gateway', icon: Server, issuePathPrefix: 'gateway' },
+  { id: 'ui', labelKey: 'config.tab.ui', icon: Palette, issuePathPrefix: 'ui' },
+  { id: 'wizard', labelKey: 'config.tab.wizard', icon: Clock3, issuePathPrefix: 'wizard' },
   { id: 'logging', labelKey: 'config.tab.logging', icon: FileCode2, issuePathPrefix: 'logging' },
   { id: 'bindings', labelKey: 'config.tab.bindings', icon: Cable, issuePathPrefix: 'bindings' },
   { id: 'skills', label: 'Skills', icon: Sparkles, issuePathPrefix: '' },
@@ -129,6 +163,11 @@ export function ConfigPanel(props: ConfigPanelProps) {
       models: 0,
       agents: 0,
       agentDefaults: 0,
+      plugins: 0,
+      channels: 0,
+      gateway: 0,
+      ui: 0,
+      wizard: 0,
       logging: 0,
       bindings: 0,
       skills: 0,
@@ -203,6 +242,56 @@ export function ConfigPanel(props: ConfigPanelProps) {
     if (tab === 'logging') {
       return (
         <LoggingSection
+          config={config}
+          issues={validationIssues}
+          updateConfig={updateConfig}
+        />
+      )
+    }
+
+    if (tab === 'plugins') {
+      return (
+        <PluginsSection
+          config={config}
+          issues={validationIssues}
+          updateConfig={updateConfig}
+        />
+      )
+    }
+
+    if (tab === 'channels') {
+      return (
+        <ChannelsSection
+          config={config}
+          issues={validationIssues}
+          updateConfig={updateConfig}
+        />
+      )
+    }
+
+    if (tab === 'gateway') {
+      return (
+        <GatewaySection
+          config={config}
+          issues={validationIssues}
+          updateConfig={updateConfig}
+        />
+      )
+    }
+
+    if (tab === 'ui') {
+      return (
+        <UiSection
+          config={config}
+          issues={validationIssues}
+          updateConfig={updateConfig}
+        />
+      )
+    }
+
+    if (tab === 'wizard') {
+      return (
+        <WizardSection
           config={config}
           issues={validationIssues}
           updateConfig={updateConfig}

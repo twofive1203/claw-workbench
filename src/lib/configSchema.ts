@@ -30,6 +30,79 @@ const OPENCLAW_CONFIG_SCHEMA: Record<string, unknown> = {
   type: 'object',
   additionalProperties: true,
   properties: {
+    wizard: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        lastRunAt: { type: 'string' },
+        lastRunVersion: { type: 'string' },
+        lastRunCommit: { type: 'string' },
+        lastRunCommand: { type: 'string' },
+        lastRunMode: { type: 'string' },
+      },
+    },
+    ui: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        seamColor: { type: 'string' },
+        assistant: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            name: { type: 'string' },
+            avatar: { type: 'string' },
+          },
+        },
+      },
+    },
+    plugins: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        enabled: { type: 'boolean' },
+        allow: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        deny: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        load: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            paths: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
+        },
+        slots: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            memory: { type: 'string' },
+            contextEngine: { type: 'string' },
+          },
+        },
+        entries: {
+          type: 'object',
+          additionalProperties: {
+            type: 'object',
+            additionalProperties: true,
+          },
+        },
+        installs: {
+          type: 'object',
+          additionalProperties: {
+            type: 'object',
+            additionalProperties: true,
+          },
+        },
+      },
+    },
     models: {
       type: 'object',
       additionalProperties: true,
@@ -232,6 +305,154 @@ const OPENCLAW_CONFIG_SCHEMA: Record<string, unknown> = {
             required: ['id'],
           },
         },
+      },
+    },
+    channels: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        defaults: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            groupPolicy: { type: 'string' },
+            heartbeat: {
+              type: 'object',
+              additionalProperties: true,
+              properties: {
+                showOk: { type: 'boolean' },
+                showAlerts: { type: 'boolean' },
+                useIndicator: { type: 'boolean' },
+              },
+            },
+          },
+        },
+        modelByChannel: {
+          type: 'object',
+          additionalProperties: {
+            type: 'object',
+            additionalProperties: { type: 'string' },
+          },
+        },
+      },
+    },
+    gateway: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        port: { type: 'number' },
+        mode: { type: 'string' },
+        bind: { type: 'string' },
+        customBindHost: { type: 'string' },
+        controlUi: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            enabled: { type: 'boolean' },
+            basePath: { type: 'string' },
+            root: { type: 'string' },
+            allowedOrigins: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+            dangerouslyAllowHostHeaderOriginFallback: { type: 'boolean' },
+            allowInsecureAuth: { type: 'boolean' },
+            dangerouslyDisableDeviceAuth: { type: 'boolean' },
+          },
+        },
+        auth: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            mode: { type: 'string' },
+            token: {
+              anyOf: [{ type: 'string' }, { type: 'object', additionalProperties: true }],
+            },
+            password: {
+              anyOf: [{ type: 'string' }, { type: 'object', additionalProperties: true }],
+            },
+            allowTailscale: { type: 'boolean' },
+            rateLimit: {
+              type: 'object',
+              additionalProperties: true,
+              properties: {
+                maxAttempts: { type: 'number' },
+                windowMs: { type: 'number' },
+                lockoutMs: { type: 'number' },
+                exemptLoopback: { type: 'boolean' },
+              },
+            },
+            trustedProxy: {
+              type: 'object',
+              additionalProperties: true,
+              properties: {
+                userHeader: { type: 'string' },
+                requiredHeaders: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+                allowUsers: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+        tailscale: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            mode: { type: 'string' },
+            resetOnExit: { type: 'boolean' },
+          },
+        },
+        remote: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            enabled: { type: 'boolean' },
+            url: { type: 'string' },
+            transport: { type: 'string' },
+            token: {
+              anyOf: [{ type: 'string' }, { type: 'object', additionalProperties: true }],
+            },
+            password: {
+              anyOf: [{ type: 'string' }, { type: 'object', additionalProperties: true }],
+            },
+            tlsFingerprint: { type: 'string' },
+            sshTarget: { type: 'string' },
+            sshIdentity: { type: 'string' },
+          },
+        },
+        reload: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            mode: { type: 'string' },
+            debounceMs: { type: 'number' },
+            deferralTimeoutMs: { type: 'number' },
+          },
+        },
+        tls: {
+          type: 'object',
+          additionalProperties: true,
+          properties: {
+            enabled: { type: 'boolean' },
+            autoGenerate: { type: 'boolean' },
+            certPath: { type: 'string' },
+            keyPath: { type: 'string' },
+            caPath: { type: 'string' },
+          },
+        },
+        trustedProxies: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        allowRealIpFallback: { type: 'boolean' },
+        channelHealthCheckMinutes: { type: 'number' },
+        channelStaleEventThresholdMinutes: { type: 'number' },
+        channelMaxRestartsPerHour: { type: 'number' },
       },
     },
     logging: {

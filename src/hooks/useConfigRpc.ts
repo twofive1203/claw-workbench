@@ -1,6 +1,8 @@
+import JSON5 from 'json5'
 import { useCallback } from 'react'
+import type { ConfigValidationIssue } from '../lib/configSchema'
+import { isRecord, toText } from '../lib/parsers'
 import { normalizeRootConfig, type OpenClawConfig } from '../types/config'
-import { toText } from '../lib/parsers'
 
 /**
  * 通用 RPC 调用签名。
@@ -23,12 +25,37 @@ interface UseConfigRpcOptions {
  * config.get 响应结构。
  * @param raw 配置原文（JSON5 字符串）。
  * @param hash 并发保护 hash。
+ * @param valid 服务端校验结果。
+ * @param issues 服务端校验问题。
+ * @param warnings 服务端告警。
+ * @param legacyIssues 服务端遗留问题。
  */
 interface ConfigGetPayload {
+  path?: unknown
   raw?: unknown
   hash?: unknown
+  valid?: unknown
+  issues?: unknown
+  warnings?: unknown
+  legacyIssues?: unknown
   config?: unknown
   parsed?: unknown
+  resolved?: unknown
+  [key: string]: unknown
+}
+
+/**
+ * config.schema 响应结构。
+ * @param schema 最新配置 JSON Schema。
+ * @param uiHints 配置 UI 提示。
+ * @param version Schema 版本。
+ * @param generatedAt Schema 生成时间。
+ */
+interface ConfigSchemaPayload {
+  schema?: unknown
+  uiHints?: unknown
+  version?: unknown
+  generatedAt?: unknown
   [key: string]: unknown
 }
 
@@ -46,11 +73,35 @@ interface ConfigWritePayload {
  * @param config 解析后的配置对象。
  * @param raw 配置原始文本。
  * @param hash 当前配置 hash。
+ * @param path 配置文件路径。
+ * @param valid 服务端校验结果。
+ * @param issues 服务端校验问题。
+ * @param warnings 服务端告警。
+ * @param legacyIssues 服务端遗留问题。
  */
 export interface ConfigFetchResult {
   config: OpenClawConfig
   raw: string
   hash: string
+  path: string | null
+  valid: boolean | null
+  issues: ConfigValidationIssue[]
+  warnings: ConfigValidationIssue[]
+  legacyIssues: ConfigValidationIssue[]
+}
+
+/**
+ * 配置 Schema 读取结果。
+ * @param schema 最新配置 JSON Schema。
+ * @param uiHints Schema 对应 UI 提示。
+ * @param version Schema 版本。
+ * @param generatedAt Schema 生成时间。
+ */
+export interface ConfigSchemaFetchResult {
+  schema: Record<string, unknown>
+  uiHints: Record<string, unknown>
+  version: string | null
+  generatedAt: string | null
 }
 
 /**
@@ -65,12 +116,14 @@ export interface ConfigWriteResult {
  * 配置 RPC 封装返回结构。
  * @param isRpcAvailable 当前是否可走 RPC。
  * @param fetchConfig 读取配置。
+ * @param fetchConfigSchema 读取远端配置 Schema。
  * @param patchConfig 局部更新配置。
  * @param applyConfig 全量替换配置。
  */
 export interface ConfigRpcResult {
   isRpcAvailable: boolean
   fetchConfig: () => Promise<ConfigFetchResult | null>
+  fetchConfigSchema: () => Promise<ConfigSchemaFetchResult | null>
   patchConfig: (raw: string, baseHash: string) => Promise<ConfigWriteResult>
   applyConfig: (raw: string, baseHash: string) => Promise<ConfigWriteResult>
 }
@@ -81,6 +134,26 @@ export interface ConfigRpcResult {
  */
 interface RpcUnavailableError extends Error {
   code?: string
+}
+
+/**
+ * 将服务端问题数组转换为统一校验问题结构。
+ * @param value 服务端返回的问题数组。
+ */
+function normalizeConfigIssues(value: unknown): ConfigValidationIssue[] {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap(item => {
+    if (!isRecord(item)) return []
+
+    const message = toText(item.message)
+    if (!message) return []
+
+    return [{
+      path: toText(item.path) ?? '(root)',
+      message,
+    }]
+  })
 }
 
 /**
@@ -106,12 +179,32 @@ function buildUnavailableError(): RpcUnavailableError {
 }
 
 /**
- * 解析 config.get 返回的 raw 文本。
+ * 解析配置原始文本。
  * @param raw 配置原始文本。
  */
-function parseRawConfig(raw: string): OpenClawConfig {
-  const parsed = raw.trim() ? JSON.parse(raw) : {}
+export function parseConfigText(raw: string): OpenClawConfig {
+  const parsed = raw.trim() ? JSON5.parse(raw) : {}
   return normalizeRootConfig(parsed)
+}
+
+/**
+ * 从 config.get 响应中提取结构化配置对象。
+ * @param payload config.get 响应。
+ */
+function resolveStructuredConfigFromPayload(payload: ConfigGetPayload): OpenClawConfig | null {
+  if (payload.config !== undefined) {
+    return normalizeRootConfig(payload.config)
+  }
+
+  if (payload.parsed !== undefined) {
+    return normalizeRootConfig(payload.parsed)
+  }
+
+  if (payload.resolved !== undefined) {
+    return normalizeRootConfig(payload.resolved)
+  }
+
+  return null
 }
 
 /**
@@ -119,21 +212,16 @@ function parseRawConfig(raw: string): OpenClawConfig {
  * @param payload config.get 响应。
  * @param raw 原始配置文本。
  */
-function resolveConfigFromPayload(payload: ConfigGetPayload, raw: string): OpenClawConfig {
-  // 新版 Gateway 会直接返回结构化 config，优先使用。
-  if (payload.config !== undefined) {
-    return normalizeRootConfig(payload.config)
-  }
-
-  // 部分返回可能仅带 parsed 字段，作为兜底。
-  if (payload.parsed !== undefined) {
-    return normalizeRootConfig(payload.parsed)
+export function resolveConfigFromPayload(payload: ConfigGetPayload, raw: string): OpenClawConfig {
+  const structuredConfig = resolveStructuredConfigFromPayload(payload)
+  if (structuredConfig) {
+    return structuredConfig
   }
 
   try {
-    return parseRawConfig(raw)
+    return parseConfigText(raw)
   } catch {
-    throw new Error('config.get 返回 raw 非 JSON，且缺少 config/parsed 字段')
+    throw new Error('config.get 返回 raw 非 JSON5，且缺少 config/parsed/resolved 字段')
   }
 }
 
@@ -141,7 +229,7 @@ function resolveConfigFromPayload(payload: ConfigGetPayload, raw: string): OpenC
  * 从 config.get 响应中提取原始文本。
  * @param payload config.get 响应。
  */
-function resolveRawTextFromPayload(payload: ConfigGetPayload): string {
+export function resolveRawTextFromPayload(payload: ConfigGetPayload): string {
   if (typeof payload.raw === 'string') {
     return payload.raw
   }
@@ -152,6 +240,10 @@ function resolveRawTextFromPayload(payload: ConfigGetPayload): string {
 
   if (payload.parsed !== undefined) {
     return toJsonText(payload.parsed)
+  }
+
+  if (payload.resolved !== undefined) {
+    return toJsonText(payload.resolved)
   }
 
   return ''
@@ -182,6 +274,30 @@ export function useConfigRpc(options: UseConfigRpcOptions): ConfigRpcResult {
       config: resolveConfigFromPayload(payload, raw),
       raw,
       hash,
+      path: toText(payload.path),
+      valid: typeof payload.valid === 'boolean' ? payload.valid : null,
+      issues: normalizeConfigIssues(payload.issues),
+      warnings: normalizeConfigIssues(payload.warnings),
+      legacyIssues: normalizeConfigIssues(payload.legacyIssues),
+    }
+  }, [callRpc, isRpcAvailable])
+
+  /**
+   * 通过 RPC 读取最新配置 Schema。
+   */
+  const fetchConfigSchema = useCallback(async (): Promise<ConfigSchemaFetchResult | null> => {
+    if (!isRpcAvailable) return null
+
+    const payload = await callRpc<ConfigSchemaPayload>('config.schema', {})
+    if (!isRecord(payload.schema)) {
+      throw new Error('config.schema 返回缺少 schema')
+    }
+
+    return {
+      schema: payload.schema,
+      uiHints: isRecord(payload.uiHints) ? payload.uiHints : {},
+      version: toText(payload.version),
+      generatedAt: toText(payload.generatedAt),
     }
   }, [callRpc, isRpcAvailable])
 
@@ -232,6 +348,7 @@ export function useConfigRpc(options: UseConfigRpcOptions): ConfigRpcResult {
   return {
     isRpcAvailable,
     fetchConfig,
+    fetchConfigSchema,
     patchConfig,
     applyConfig,
   }
