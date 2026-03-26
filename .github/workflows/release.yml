@@ -65,13 +65,13 @@ jobs:
 
       - name: check tag matches package version
         run: |
-          node -e "const version=require('./package.json').version; const tag=process.env.GITHUB_REF_NAME; const expected=`v${version}`; if (tag !== expected) { console.error(`Tag ${tag} 与 package.json 版本 ${expected} 不一致`); process.exit(1); } console.log(`版本校验通过：${tag}`)"
+          node scripts/check-tag-version.mjs
 
       - name: install frontend dependencies
         run: pnpm install --frozen-lockfile
 
       - name: build desktop bundle
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
