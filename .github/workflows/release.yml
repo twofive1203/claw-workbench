@@ -1,0 +1,88 @@
+name: 'Tag Release Build'
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  package:
+    name: 'Package (${{ matrix.label }})'
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: 'macOS'
+            platform: 'macos-latest'
+            args: '--target universal-apple-darwin'
+            rust_targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
+          - label: 'Linux'
+            platform: 'ubuntu-22.04'
+            args: ''
+            rust_targets: ''
+          - label: 'Windows'
+            platform: 'windows-latest'
+            args: ''
+            rust_targets: ''
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: install Rust stable
+        if: matrix.rust_targets == ''
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install Rust stable with macOS targets
+        if: matrix.rust_targets != ''
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_targets }}
+
+      - name: install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: check version sync
+        run: pnpm version:check
+
+      - name: check tag matches package version
+        run: |
+          node -e "const version=require('./package.json').version; const tag=process.env.GITHUB_REF_NAME; const expected=`v${version}`; if (tag !== expected) { console.error(`Tag ${tag} 与 package.json 版本 ${expected} 不一致`); process.exit(1); } console.log(`版本校验通过：${tag}`)"
+
+      - name: install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: build desktop bundle
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tauriScript: 'pnpm tauri'
+          tagName: ${{ github.ref_name }}
+          releaseName: 'ClawWorkbench ${{ github.ref_name }}'
+          releaseBody: 'See the assets below to download this ClawWorkbench desktop build.'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+          uploadUpdaterJson: false
+          uploadUpdaterSignatures: false
+          uploadWorkflowArtifacts: true
+          workflowArtifactNamePattern: 'clawworkbench-[platform]-[arch]-[bundle]'

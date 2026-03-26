@@ -1,0 +1,81 @@
+# =========================
+# Node / Frontend
+# =========================
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.parcel-cache/
+.cache/
+.vite/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+coverage/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.local
+
+# =========================
+# Rust / Tauri
+# =========================
+/src-tauri/target/
+/src-tauri/gen/
+**/*.rs.bk
+
+# =========================
+# IDE / Editor
+# =========================
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.iml
+*.suo
+*.user
+*.userossc
+*.sln.docstates
+*.swp
+*.swo
+*~
+
+# =========================
+# OS junk files
+# =========================
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# =========================
+# Temp
+# =========================
+tmp/
+temp/
+*.tmp
+
+# =========================
+# Local agent/tool folders
+# =========================
+.claude/
+.agent/
+.docs/
+docs/plan
+.omc/
