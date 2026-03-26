@@ -6,6 +6,10 @@ ClawWorkbench 是一个面向 OpenClaw Gateway v3 的桌面客户端。
 
 它不只是一个聊天窗口，还提供多服务器接入、多 Agent / 多 Session 管理、配置编辑、日志 / Memory / Cron / 子代理面板，以及桌面端专属的通知、托盘和远程 Web 访问能力。
 
+## 界面截图
+
+![ClawWorkbench 中文主页截图](./public/readme/homepage-zh-cn.png)
+
 ## 适合什么场景
 
 - 连接本地或远程 OpenClaw Gateway，统一管理多个服务器

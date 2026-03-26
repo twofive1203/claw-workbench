@@ -6,6 +6,10 @@ ClawWorkbench is a desktop client for OpenClaw Gateway v3.
 
 It is more than a chat window. It also provides multi-server access, multi-Agent / multi-Session management, config editing, Logs / Memory / Cron / Subagent panels, plus desktop-only notifications, tray support, and remote Web access.
 
+## Screenshot
+
+![ClawWorkbench homepage screenshot](./public/readme/homepage-en.png)
+
 ## Best For
 
 - Connecting to local or remote OpenClaw Gateways and managing multiple servers in one place
