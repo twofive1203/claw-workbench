@@ -5,6 +5,21 @@
  */
 
 import * as ed from '@noble/ed25519'
+import { sha256, sha512 } from '@noble/hashes/sha2.js'
+
+/**
+ * 异步计算 SHA-512，用于覆盖 noble 默认的 Web Crypto subtle 依赖。
+ * @param message 待计算哈希的消息字节。
+ */
+function sha512AsyncFallback(message: Uint8Array): Promise<Uint8Array> {
+  return Promise.resolve(sha512(message))
+}
+
+/**
+ * 为 HTTP/IP 远程访问场景配置纯 JS 哈希实现，避免 noble 默认依赖 crypto.subtle。
+ */
+ed.hashes.sha512 = sha512
+ed.hashes.sha512Async = sha512AsyncFallback
 
 // ===================== 类型 =====================
 
@@ -100,13 +115,31 @@ async function loadPluginStore(file: string): Promise<PluginStoreInstance> {
 let cachedIdentity: DeviceIdentity | null = null
 
 /**
+ * 计算字节数组的 SHA-256 摘要。
+ * @param bytes 输入字节数组。
+ */
+async function digestSha256(bytes: Uint8Array): Promise<Uint8Array> {
+  const subtle = globalThis.crypto?.subtle
+  if (subtle) {
+    try {
+      // 注意：TS 的 lib.dom BufferSource 类型不接受 SharedArrayBuffer；slice() 会返回基于 ArrayBuffer 的拷贝。
+      const hashBuffer = await subtle.digest('SHA-256', bytes.slice())
+      return new Uint8Array(hashBuffer)
+    } catch {
+      // 远程 Web 通过 HTTP/IP 访问时，部分浏览器可能存在 subtle 可见但不可用的情况，这里回退到纯 JS 实现。
+    }
+  }
+
+  return sha256(bytes)
+}
+
+/**
  * 从 SHA-256(公钥原始字节) 派生 deviceId。
  * @param publicKey 公钥原始字节（通常为 32 bytes）。
  */
 async function deriveDeviceId(publicKey: Uint8Array): Promise<string> {
-  // 注意：TS 的 lib.dom BufferSource 类型不接受 SharedArrayBuffer；slice() 会返回基于 ArrayBuffer 的拷贝。
-  const hashBuffer = await crypto.subtle.digest('SHA-256', publicKey.slice())
-  return toHex(new Uint8Array(hashBuffer))
+  const hashBytes = await digestSha256(publicKey)
+  return toHex(hashBytes)
 }
 
 /**
