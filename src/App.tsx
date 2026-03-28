@@ -42,7 +42,7 @@ const TOOL_CALL_VISIBILITY_STORAGE_KEY = 'openclaw-show-tool-calls'
 const CHAT_VIEW_MODE_STORAGE_KEY = 'openclaw-chat-view-mode'
 const MESSAGE_EXPORT_SUCCESS_RESET_MS = 2000
 const MESSAGE_ACTION_SUCCESS_RESET_MS = 2000
-const MESSAGE_ACTION_BUTTON_CLASS = 'inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-gray-700)] bg-[color-mix(in_srgb,var(--color-gray-900)_72%,transparent)] px-2.5 py-1 text-[11px] text-[var(--color-gray-400)] transition hover:border-[var(--color-gray-500)] hover:text-[var(--color-gray-100)] disabled:cursor-not-allowed disabled:opacity-60'
+const MESSAGE_ACTION_BUTTON_CLASS = 'wb-mini-button'
 const USER_SENDER_NAME = 'You'
 const SYSTEM_SENDER_NAME = 'System'
 const DEFAULT_ASSISTANT_SENDER_NAME = 'Agent'
@@ -2294,7 +2294,7 @@ function App() {
   const combinedError = error ?? actionError
 
   return (
-    <div data-theme={themeId} className="flex h-screen bg-[var(--color-gray-950)] text-[var(--color-gray-100)]">
+    <div data-theme={themeId} className="wb-app-shell flex h-screen text-[var(--app-text-primary)]">
       <AppSidebar
         sidebarOpen={sidebarOpen}
         tr={tr}
@@ -2374,65 +2374,79 @@ function App() {
         }}
       />
 
-      <div className="relative flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center gap-2 border-b border-[var(--color-gray-800)] px-3 py-2 md:hidden">
-          <button
-            type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] text-[var(--color-gray-300)]"
-            onClick={() => setSidebarOpen(true)}
-            title={tr('app.sidebar.open')}
-          >
-            <Menu className="h-4 w-4" />
-          </button>
-          <div className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--color-gray-100)]">
-            {currentAgent?.name ?? currentAgent?.id ?? tr('app.agent.unselected')}
-          </div>
-          <div className="flex shrink-0 items-center gap-1 text-[11px] text-[var(--color-gray-500)]">
-            <span
-              className={cn(
-                'inline-block h-2 w-2 rounded-full',
-                isConnected ? 'bg-[var(--color-emerald-500)]' : 'bg-[var(--color-red-500)]',
-              )}
+      <div className="flex min-w-0 flex-1 p-0 md:p-3">
+        <div className="flex min-w-0 flex-1 gap-0 xl:gap-3">
+          <div className="wb-main-shell wb-grid-noise relative flex min-w-0 flex-1 flex-col">
+            <div className="wb-mobile-topbar flex items-center gap-2 border-b border-[var(--border-default)] px-3 py-3 md:hidden">
+              <button
+                type="button"
+                className="wb-icon-button"
+                onClick={() => setSidebarOpen(true)}
+                title={tr('app.sidebar.open')}
+              >
+                <Menu className="h-4 w-4" />
+              </button>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold text-[var(--text-strong)]">
+                  {currentAgent?.name ?? currentAgent?.id ?? tr('app.agent.unselected')}
+                </div>
+                <div className="truncate text-[11px] text-[var(--text-faint)]">
+                  {focusedSessionKey ?? tr('app.session.unselected')}
+                </div>
+              </div>
+              <span className={cn('wb-chip-muted', isConnected ? 'text-[var(--color-emerald-200)]' : 'text-[var(--color-red-200)]')}>
+                <span
+                  className={cn(
+                    'inline-block h-2 w-2 rounded-full',
+                    isConnected ? 'bg-[var(--color-emerald-500)]' : 'bg-[var(--color-red-500)]',
+                  )}
+                />
+                {isConnected ? tr('common.connected') : tr('common.disconnected')}
+              </span>
+            </div>
+
+            {isWebRemote && (
+              <div className="px-3 pt-3 md:px-4 md:pt-4">
+                <div className="wb-info-banner text-xs">
+                  <Globe className="h-3.5 w-3.5 shrink-0" />
+                  <span>{tr('app.remote.web_mode')} · {tr('app.remote.connect_to')} {activeServer?.name ?? tr('app.remote.server')}</span>
+                </div>
+              </div>
+            )}
+
+            {(shutdownNotification || updateNotification) && (
+              <div className="px-3 pt-3 md:px-4 md:pt-4">
+                <SystemNotification
+                  key={`${shutdownNotification?.receivedAt ?? 'none'}-${updateNotification?.receivedAt ?? 'none'}`}
+                  shutdown={shutdownNotification}
+                  update={updateNotification}
+                  onDismissUpdate={dismissUpdateNotification}
+                />
+              </div>
+            )}
+
+            <AppPrimaryPanel
+              activePanel={activePanel}
+              tr={tr}
+              configPanelProps={{
+                store: configStore,
+                callRpc,
+                themeId,
+                onThemeChange: setTheme,
+              }}
+              memoryPanelProps={{
+                focusedAgentId,
+                searchMemory,
+                listMemory,
+                deleteMemory,
+              }}
+              logsPanelProps={{
+                isConnected,
+                supportsLogsTail,
+                tailLogs,
+              }}
+              onClosePanel={closeActivePanel}
             />
-            {isConnected ? tr('common.connected') : tr('common.disconnected')}
-          </div>
-        </div>
-        {isWebRemote && (
-          <div className="flex items-center gap-2 border-b border-[color-mix(in_srgb,var(--color-blue-800)_50%,transparent)] bg-[color-mix(in_srgb,var(--color-blue-950)_40%,transparent)] px-4 py-1.5 text-xs text-[var(--color-blue-200)]">
-            <Globe className="h-3.5 w-3.5 shrink-0" />
-            <span>{tr('app.remote.web_mode')} · {tr('app.remote.connect_to')} {activeServer?.name ?? tr('app.remote.server')}</span>
-          </div>
-        )}
-        {(shutdownNotification || updateNotification) && (
-          <SystemNotification
-            key={`${shutdownNotification?.receivedAt ?? 'none'}-${updateNotification?.receivedAt ?? 'none'}`}
-            shutdown={shutdownNotification}
-            update={updateNotification}
-            onDismissUpdate={dismissUpdateNotification}
-          />
-        )}
-        <AppPrimaryPanel
-          activePanel={activePanel}
-          tr={tr}
-          configPanelProps={{
-            store: configStore,
-            callRpc,
-            themeId,
-            onThemeChange: setTheme,
-          }}
-          memoryPanelProps={{
-            focusedAgentId,
-            searchMemory,
-            listMemory,
-            deleteMemory,
-          }}
-          logsPanelProps={{
-            isConnected,
-            supportsLogsTail,
-            tailLogs,
-          }}
-          onClosePanel={closeActivePanel}
-        />
         {!isMainContentPanel(activePanel) && (
           <>
             <AppMainHeader
@@ -2470,16 +2484,19 @@ function App() {
               }}
             />
 
-        <main className="flex-1 overflow-y-auto px-4 py-6">
+        <main className="flex-1 overflow-y-auto px-4 pb-8 pt-6 md:px-6 md:pb-10 md:pt-8">
           {!focusedSessionKey && (
-            <div className="flex h-full items-center justify-center text-sm text-[var(--color-gray-600)]">
-              {tr('app.message.select_agent_and_session')}
+            <div className="mx-auto flex min-h-full max-w-3xl items-center justify-center py-12">
+              <div className="wb-empty-state w-full px-6 py-16 text-center text-sm">
+                {tr('app.message.select_agent_and_session')}
+              </div>
             </div>
           )}
 
           {focusedSessionKey && isMultiModelMode && (
             <div className="mx-auto max-w-7xl space-y-4">
-              <div className="rounded-xl border border-[color-mix(in_srgb,var(--color-blue-800)_45%,transparent)] bg-[color-mix(in_srgb,var(--color-blue-950)_24%,transparent)] px-3 py-2 text-xs text-[var(--color-blue-200)]">
+              <div className="wb-info-banner text-xs">
+                <Globe className="h-3.5 w-3.5 shrink-0" />
                 {tr('app.message.multi_model_broadcast', { count: multiModelPaneViews.length })}
               </div>
 
@@ -2510,16 +2527,16 @@ function App() {
           )}
 
           {focusedSessionKey && !isMultiModelMode && (
-            <div className="mx-auto max-w-4xl space-y-4">
+            <div className="wb-message-stack">
               {isLoadingHistory && (
-                <div className="inline-flex items-center gap-1 rounded-md border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-900)_70%,transparent)] px-2.5 py-1 text-xs text-[var(--color-gray-400)]">
+                <div className="wb-chip">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   {tr('app.message.loading_history')}
                 </div>
               )}
 
               {messages.length === 0 && !isLoadingHistory && (
-                <div className="py-16 text-center text-sm text-[var(--color-gray-600)]">{tr('app.message.start_chat')}</div>
+                <div className="wb-empty-state px-6 py-16 text-center text-sm">{tr('app.message.start_chat')}</div>
               )}
 
               {messages.map(msg => {
@@ -2550,6 +2567,7 @@ function App() {
                 const senderBadgeText = senderName.slice(0, 1).toUpperCase()
                 const isUserMessage = msg.role === 'user'
                 const isSystemMessage = msg.role === 'system'
+                const roleClass = isUserMessage ? 'user' : isSystemMessage ? 'system' : 'assistant'
                 const canExportMarkdown = msg.role === 'assistant' && hasText && msg.messageState !== 'streaming'
                 const canCopyMarkdown = canExportMarkdown
                 const canCopyPlainText = canExportMarkdown
@@ -2578,50 +2596,26 @@ function App() {
                 ].filter((item): item is string => Boolean(item)).join(' · ')
 
                 return (
-                  <div
-                    key={msg.id}
-                    className={cn('flex', isUserMessage ? 'justify-end' : 'justify-start')}
-                  >
-                    <div
-                      className={cn(
-                        'flex max-w-[90%] flex-col gap-1',
-                        isUserMessage ? 'items-end' : 'items-start',
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          'flex flex-wrap items-center gap-2 text-[11px]',
-                          isUserMessage ? 'justify-end text-right' : 'justify-start text-left',
-                        )}
-                      >
+                  <div key={msg.id} className={cn('wb-message-row', roleClass)}>
+                    <div className={cn('wb-message-block', roleClass)}>
+                      <div className="wb-message-meta">
                         <span
                           className={cn(
-                            'inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold',
+                            'wb-message-avatar',
                             isUserMessage
-                              ? 'bg-[color-mix(in_srgb,var(--color-pink-400)_45%,var(--color-pink-900)_55%)] text-[var(--color-pink-100)]'
+                              ? 'bg-[color-mix(in_srgb,var(--color-pink-400)_24%,transparent)] text-[var(--color-pink-100)]'
                               : isSystemMessage
-                                ? 'bg-[color-mix(in_srgb,var(--color-red-700)_45%,var(--color-red-950)_55%)] text-[var(--color-red-100)]'
-                                : 'bg-[var(--color-gray-700)] text-[var(--color-gray-200)]',
+                                ? 'bg-[color-mix(in_srgb,var(--color-red-700)_28%,transparent)] text-[var(--color-red-100)]'
+                                : 'text-[var(--text-loud)]',
                           )}
                         >
                           {senderBadgeText}
                         </span>
-                        <span className="text-xs font-medium text-[var(--color-gray-300)]">{senderName}</span>
-                        {messageMetaText && (
-                          <span className="text-[11px] text-[var(--color-gray-500)]">{messageMetaText}</span>
-                        )}
+                        <span className="text-xs font-medium text-[var(--text-subtle)]">{senderName}</span>
+                        {messageMetaText && <span>{messageMetaText}</span>}
                       </div>
 
-                      <div
-                        className={cn(
-                          'w-fit max-w-full rounded-2xl px-3 py-2 text-sm leading-relaxed md:px-4 md:py-2.5',
-                          isUserMessage
-                            ? 'bg-user-bubble text-user-bubble-foreground'
-                            : isSystemMessage
-                              ? 'border border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_50%,transparent)] text-[var(--color-red-200)]'
-                              : 'bg-[var(--color-gray-800)] text-[var(--color-gray-100)]',
-                        )}
-                      >
+                      <div className={cn('wb-message-card', roleClass)}>
                         {/* 附件 */}
                         {(() => {
                           const hasAttachments = msg.attachments && msg.attachments.length > 0
@@ -2634,7 +2628,7 @@ function App() {
 
                           if (!showFiles) return null
                           return (
-                            <div className="mb-1.5 flex flex-wrap gap-1.5">
+                            <div className="mb-3 flex flex-wrap gap-2">
                               {hasMediaItems && mediaItems.map((item, i) => (
                                 (() => {
                                   const originalSrc = item.src.trim()
@@ -2655,12 +2649,12 @@ function App() {
                                       key={`media-${i}-${item.src.slice(0, 24)}`}
                                       src={renderItem.src}
                                       alt={renderItem.sourceType ? tr('app.message.image_alt_with_source', { source: renderItem.sourceType }) : tr('common.image')}
-                                      className="max-h-48 max-w-full rounded-lg"
+                                      className="max-h-56 max-w-full rounded-2xl border border-[var(--border-default)] object-cover shadow-[var(--shadow-soft)]"
                                     />
                                   ) : (
                                     <div
                                       key={`media-omitted-${i}`}
-                                      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-gray-600)] bg-[color-mix(in_srgb,var(--color-gray-900)_60%,transparent)] px-2.5 py-1.5 text-xs text-[var(--color-gray-300)]"
+                                      className="inline-flex items-center gap-2 rounded-[14px] border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] px-3 py-2 text-xs text-[var(--text-subtle)]"
                                     >
                                       {item.omitted
                                         ? (typeof item.bytes === 'number'
@@ -2679,12 +2673,12 @@ function App() {
                                     key={i}
                                     src={att.data}
                                     alt={att.filename ?? tr('common.image')}
-                                    className="max-h-48 max-w-full rounded-lg"
+                                    className="max-h-56 max-w-full rounded-2xl border border-[var(--border-default)] object-cover shadow-[var(--shadow-soft)]"
                                   />
                                 ) : (
                                   <div
                                     key={i}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-gray-600)] bg-[color-mix(in_srgb,var(--color-gray-900)_60%,transparent)] px-2.5 py-1.5 text-xs text-[var(--color-gray-300)]"
+                                    className="inline-flex items-center gap-2 rounded-[14px] border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] px-3 py-2 text-xs text-[var(--text-subtle)]"
                                   >
                                     📎 {att.filename ?? tr('common.file')}
                                   </div>
@@ -2693,7 +2687,7 @@ function App() {
                               {inlineFileNames.map((name, i) => (
                                 <div
                                   key={`inline-${i}`}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-gray-600)] bg-[color-mix(in_srgb,var(--color-gray-900)_60%,transparent)] px-2.5 py-1.5 text-xs text-[var(--color-gray-300)]"
+                                  className="inline-flex items-center gap-2 rounded-[14px] border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] px-3 py-2 text-xs text-[var(--text-subtle)]"
                                 >
                                   📎 {name}
                                 </div>
@@ -2703,7 +2697,7 @@ function App() {
                         })()}
                         {/* 文本内容 */}
                         {msg.role === 'assistant' && visibleToolCalls.length > 0 && (
-                          <div className="mb-2 space-y-1.5">
+                          <div className="mb-3 space-y-2">
                             {visibleToolCalls.map(call => (
                               <ToolCallBlock
                                 key={`${call.toolCallId}-${call.startedAt}`}
@@ -2737,12 +2731,12 @@ function App() {
                             </Markdown>
                           </div>
                         ) : msg.content.trim() ? (
-                          <span className="whitespace-pre-wrap">
+                          <span className="whitespace-pre-wrap break-words">
                             {msg.role === 'user' ? sanitizeUserDisplayContent(msg.content) : msg.content}
                           </span>
                         ) : null}
                         {(canCopyMarkdown || canCopyPlainText || canRetryMessage || canExportMarkdown) && (
-                          <div className="mt-3 flex items-center gap-2 border-t border-[color-mix(in_srgb,var(--color-gray-700)_65%,transparent)] pt-2">
+                          <div className="wb-message-actions">
                             {canCopyMarkdown && (
                               <button
                                 type="button"
@@ -2836,12 +2830,14 @@ function App() {
               })}
 
               {isTyping && messages[messages.length - 1]?.role !== 'assistant' && (
-                <div className="flex justify-start">
-                  <div className="rounded-2xl bg-[var(--color-gray-800)] px-4 py-2.5">
-                    <div className="mb-0.5 text-[11px] text-[var(--color-gray-400)]">
-                      {currentAgentDisplayName ?? DEFAULT_ASSISTANT_SENDER_NAME}
+                <div className="wb-message-row assistant">
+                  <div className="wb-message-block assistant">
+                    <div className="wb-message-card assistant">
+                      <div className="mb-1 text-[11px] text-[var(--text-faint)]">
+                        {currentAgentDisplayName ?? DEFAULT_ASSISTANT_SENDER_NAME}
+                      </div>
+                      <span className="typing-dots text-sm text-[var(--text-muted)]">{tr('思考中')}</span>
                     </div>
-                    <span className="typing-dots text-sm text-[var(--color-gray-400)]">{tr('思考中')}</span>
                   </div>
                 </div>
               )}
@@ -2851,25 +2847,13 @@ function App() {
           )}
         </main>
 
-        <footer className="safe-bottom border-t border-[var(--color-gray-800)] px-3 py-2 md:px-4 md:py-3">
+        <footer className="wb-composer-shell safe-bottom px-3 pb-3 md:px-4 md:pb-4">
           <div
             className={cn(
-              'relative mx-auto rounded-xl transition-colors',
+              'relative mx-auto transition-transform',
               isMultiModelMode ? 'max-w-7xl' : 'max-w-4xl',
-              isDragOver && 'ring-2 ring-[color-mix(in_srgb,var(--color-blue-500)_50%,transparent)]',
             )}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
           >
-            {/* 拖拽提示遮罩 */}
-            {isDragOver && (
-              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-[var(--color-blue-500)] bg-[color-mix(in_srgb,var(--color-blue-500)_10%,transparent)]">
-                <span className="text-sm text-[var(--color-blue-300)]">{tr('松开以添加文件')}</span>
-              </div>
-            )}
-
-            {/* 命令面板 */}
             {commandDetection.shouldShow && (
               <CommandPalette
                 commands={commandDetection.filteredCommands}
@@ -2881,69 +2865,106 @@ function App() {
               />
             )}
 
-            {/* 图片预览条 */}
-            <ImagePreview images={pendingImages} onRemove={handleRemoveImage} />
+            <div
+              className={cn('wb-composer-frame', isMultiModelMode && 'wide')}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {isDragOver && (
+                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-[24px] border border-dashed border-[var(--border-accent)] bg-[color-mix(in_srgb,var(--surface-active)_78%,transparent)] backdrop-blur-sm">
+                  <span className="text-sm text-[var(--color-blue-200)]">{tr('松开以添加文件')}</span>
+                </div>
+              )}
 
-            {/* 隐藏文件选择器 */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              className="hidden"
-              onChange={(e) => {
-                const files = Array.from(e.target.files ?? [])
-                if (files.length > 0) void addImageFiles(files)
-                e.target.value = ''
-              }}
-            />
+              <ImagePreview images={pendingImages} onRemove={handleRemoveImage} />
 
-            {/* 输入框 */}
-            <div className="flex items-end gap-2">
-              <button
-                type="button"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--color-gray-400)] transition-colors hover:bg-[var(--color-gray-800)] hover:text-[var(--color-gray-200)]"
-                title={tr('上传文件')}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Paperclip className="h-4 w-4" />
-              </button>
-              <textarea
-                ref={textareaRef}
-                value={input}
-                rows={1}
-                placeholder={isMultiModelMode
-                  ? tr('输入消息… 将同时发送到全部多模型对话（Shift+Enter 换行）')
-                  : tr('输入消息… (Shift+Enter 换行，/ 触发命令，📎 上传文件)')}
-                className={cn(
-                  'flex-1 resize-none rounded-xl border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-4 py-2.5',
-                  'text-sm text-[var(--color-gray-100)] placeholder:text-[var(--color-gray-500)]',
-                  'outline-none transition-colors focus:border-[var(--color-gray-500)]',
-                )}
-                onChange={e => handleInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onPaste={handlePaste}
-                onSelect={handleSelectionChange}
-                onClick={handleSelectionChange}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files ?? [])
+                  if (files.length > 0) void addImageFiles(files)
+                  e.target.value = ''
+                }}
               />
-              <button
-                type="button"
-                disabled={!canSubmitMessage}
-                className={cn(
-                  'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors',
-                  canSubmitMessage
-                    ? 'bg-[var(--color-blue-600)] text-[var(--color-white)] hover:bg-[var(--color-blue-500)]'
-                    : 'cursor-not-allowed bg-[var(--color-gray-800)] text-[var(--color-gray-600)]',
+
+              <div className="wb-composer-input-row">
+                <button
+                  type="button"
+                  className="wb-icon-button mt-1 h-10 w-10 shrink-0 rounded-full"
+                  title={tr('上传文件')}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Paperclip className="h-4 w-4" />
+                </button>
+
+                <div className="wb-composer-input-surface">
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    rows={1}
+                    placeholder={isMultiModelMode
+                      ? tr('输入消息… 将同时发送到全部多模型对话（Shift+Enter 换行）')
+                      : tr('输入消息… (Shift+Enter 换行，/ 触发命令，📎 上传文件)')}
+                    className="wb-textarea min-h-[94px] border-none bg-transparent px-4 py-4 shadow-none"
+                    onChange={e => handleInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onPaste={handlePaste}
+                    onSelect={handleSelectionChange}
+                    onClick={handleSelectionChange}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  disabled={!canSubmitMessage}
+                  className="wb-primary-button h-11 w-11 shrink-0 rounded-full px-0"
+                  onClick={handleSend}
+                >
+                  {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </div>
+
+              <div className="wb-composer-meta">
+                <span className="wb-chip-muted">{currentAgent?.name ?? currentAgent?.id ?? tr('app.agent.unselected')}</span>
+                {focusedSessionKey && <span className="wb-chip-muted" data-no-i18n>{focusedSessionKey}</span>}
+                <span className={cn('wb-chip-muted', isConnected ? 'text-[var(--color-emerald-200)]' : 'text-[var(--color-red-200)]')}>
+                  {isConnected ? tr('common.connected') : tr('common.disconnected')}
+                </span>
+                {isMultiModelMode && (
+                  <span className="wb-chip">
+                    {tr('app.multi_model.enabled_count', { count: multiModelPaneViews.length })}
+                  </span>
                 )}
-                onClick={handleSend}
-              >
-                {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </button>
+              </div>
             </div>
           </div>
         </footer>
 
-        {showSubagentPanel && (
-          <div className="fixed inset-0 z-40 md:absolute md:right-4 md:top-20 md:inset-auto md:h-[calc(100%-6rem)] md:w-[360px]">
+          </>
+        )}
+          </div>
+
+          {!isMainContentPanel(activePanel) && showSubagentPanel && (
+            <aside className="wb-right-rail hidden xl:flex xl:w-[360px] xl:shrink-0">
+              <SubagentPanel
+                subagentTasks={subagentTasks}
+                abortSubagent={(sessionKey) => runAction(() => abortSubagent(sessionKey))}
+                clearCompletedSubagents={clearCompletedSubagents}
+                onClose={() => setShowSubagentPanel(false)}
+              />
+            </aside>
+          )}
+        </div>
+      </div>
+
+      {!isMainContentPanel(activePanel) && showSubagentPanel && (
+        <div className="fixed inset-0 z-40 xl:hidden">
+          <div className="absolute inset-0 bg-overlay" onClick={() => setShowSubagentPanel(false)} />
+          <div className="absolute inset-x-3 bottom-3 top-16">
             <SubagentPanel
               subagentTasks={subagentTasks}
               abortSubagent={(sessionKey) => runAction(() => abortSubagent(sessionKey))}
@@ -2951,10 +2972,8 @@ function App() {
               onClose={() => setShowSubagentPanel(false)}
             />
           </div>
-        )}
-          </>
-        )}
-      </div>
+        </div>
+      )}
 
       {deleteSessionKey && (
         <ConfirmModal
@@ -2969,27 +2988,27 @@ function App() {
 
       {showMultiModelConfirmModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-3 md:p-4"
+          className="wb-modal-backdrop"
           onPointerDown={handleMultiModelConfirmBackdropPointerDown}
         >
           <div
-            className="w-full max-w-lg space-y-4 rounded-lg border border-[var(--color-gray-800)] bg-[var(--color-gray-900)] p-4 shadow-2xl"
+            className="wb-modal-card w-full max-w-lg space-y-4"
             onClick={event => event.stopPropagation()}
           >
             <div className="space-y-1">
-              <div className="text-sm font-semibold text-[var(--color-gray-100)]">{tr('app.multi_model.dialog_title')}</div>
-              <div className="text-xs leading-5 text-[var(--color-gray-300)]">
+              <div className="text-sm font-semibold text-[var(--text-strong)]">{tr('app.multi_model.dialog_title')}</div>
+              <div className="text-xs leading-6 text-[var(--text-subtle)]">
                 {tr('app.multi_model.dialog_description')}
               </div>
             </div>
 
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-xs text-[var(--color-gray-400)]">{tr('app.multi_model.dialog_count')}</label>
+                <label className="text-xs text-[var(--text-faint)]">{tr('app.multi_model.dialog_count')}</label>
                 <select
                   value={String(multiModelDraftCount)}
                   onChange={(event) => handleChangeMultiModelDraftCount(Number(event.target.value))}
-                  className="w-full rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-950)] px-2.5 py-1.5 text-xs text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+                  className="wb-select"
                 >
                   <option value="2">{tr('app.multi_model.count_option', { count: 2 })}</option>
                   <option value="3">{tr('app.multi_model.count_option', { count: 3 })}</option>
@@ -3000,12 +3019,12 @@ function App() {
               <div className="space-y-2">
                 {Array.from({ length: multiModelDraftCount }, (_, index) => (
                   <div key={`multi-model-draft-${index}`} className="space-y-1">
-                    <label className="text-xs text-[var(--color-gray-400)]">{tr('app.multi_model.dialog_conversation_model', { index: index + 1 })}</label>
+                    <label className="text-xs text-[var(--text-faint)]">{tr('app.multi_model.dialog_conversation_model', { index: index + 1 })}</label>
                     {sessionModelOptions.length > 0 ? (
                       <select
                         value={multiModelDraftModels[index] ?? ''}
                         onChange={(event) => handleChangeMultiModelDraftModel(index, event.target.value)}
-                        className="w-full rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-950)] px-2.5 py-1.5 text-xs text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+                        className="wb-select"
                       >
                         <option value="">{tr('common.default_model')}</option>
                         {sessionModelOptions.map((modelId) => (
@@ -3020,14 +3039,14 @@ function App() {
                         value={multiModelDraftModels[index] ?? ''}
                         onChange={(event) => handleChangeMultiModelDraftModel(index, event.target.value)}
                         placeholder={tr('app.multi_model.default_model_hint')}
-                        className="w-full rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-950)] px-2.5 py-1.5 text-xs text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+                        className="wb-input"
                       />
                     )}
                   </div>
                 ))}
               </div>
 
-              <div className="rounded-md border border-[color-mix(in_srgb,var(--color-blue-900)_50%,transparent)] bg-[color-mix(in_srgb,var(--color-blue-950)_30%,transparent)] px-2.5 py-2 text-[11px] leading-5 text-[var(--color-blue-200)]">
+              <div className="wb-inline-note rounded-[16px] border-[color-mix(in_srgb,var(--color-blue-700)_30%,transparent)] px-3 py-2 text-[11px] leading-5 text-[var(--color-blue-200)]">
                 {tr('app.multi_model.dialog_confirm_note', { count: multiModelDraftCount })}
               </div>
             </div>
@@ -3035,14 +3054,14 @@ function App() {
             <div className="flex items-center justify-end gap-2 pt-1">
               <button
                 type="button"
-                className="rounded-md px-2 py-1 text-xs text-[var(--color-gray-400)] hover:text-[var(--color-gray-200)]"
+                className="wb-ghost-button"
                 onClick={closeMultiModelConfirmModal}
               >
                 {tr('common.cancel')}
               </button>
               <button
                 type="button"
-                className="rounded-md bg-[var(--color-blue-600)] px-3 py-1 text-xs text-[var(--color-white)] hover:bg-[var(--color-blue-500)]"
+                className="wb-primary-button"
                 onClick={confirmEnableMultiModelMode}
               >
                 {tr('app.multi_model.dialog_confirm_create')}
@@ -3054,28 +3073,28 @@ function App() {
 
       {showMultiModelExitModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-3 md:p-4"
+          className="wb-modal-backdrop"
           onPointerDown={handleMultiModelExitBackdropPointerDown}
         >
           <div
-            className="w-full max-w-lg space-y-4 rounded-lg border border-[var(--color-gray-800)] bg-[var(--color-gray-900)] p-4 shadow-2xl"
+            className="wb-modal-card w-full max-w-lg space-y-4"
             onClick={event => event.stopPropagation()}
           >
             <div className="space-y-1">
-              <div className="text-sm font-semibold text-[var(--color-gray-100)]">{tr('app.multi_model.exit_dialog_title')}</div>
-              <div className="text-xs leading-5 text-[var(--color-gray-300)]">
+              <div className="text-sm font-semibold text-[var(--text-strong)]">{tr('app.multi_model.exit_dialog_title')}</div>
+              <div className="text-xs leading-6 text-[var(--text-subtle)]">
                 {tr('app.multi_model.exit_dialog_description')}
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="text-xs text-[var(--color-gray-400)]">{tr('app.multi_model.exit_dialog_keep_label')}</div>
+                <div className="text-xs text-[var(--text-faint)]">{tr('app.multi_model.exit_dialog_keep_label')}</div>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     disabled={isMultiModelExitProcessing}
-                    className="rounded-md px-2 py-1 text-xs text-[var(--color-gray-400)] hover:text-[var(--color-gray-200)] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="wb-ghost-button disabled:opacity-60"
                     onClick={() => setMultiModelExitKeepSessionKeys(Array.from(new Set(multiModelPanes.map(pane => pane.sessionKey))))}
                   >
                     {tr('app.multi_model.exit_dialog_select_all')}
@@ -3083,7 +3102,7 @@ function App() {
                   <button
                     type="button"
                     disabled={isMultiModelExitProcessing}
-                    className="rounded-md px-2 py-1 text-xs text-[var(--color-gray-400)] hover:text-[var(--color-gray-200)] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="wb-ghost-button disabled:opacity-60"
                     onClick={() => setMultiModelExitKeepSessionKeys([])}
                   >
                     {tr('app.multi_model.exit_dialog_select_none')}
@@ -3101,10 +3120,10 @@ function App() {
                     <label
                       key={`multi-model-exit-${pane.id}`}
                       className={cn(
-                        'flex cursor-pointer items-start gap-2 rounded-md border px-2.5 py-2 transition',
+                        'flex cursor-pointer items-start gap-2 rounded-[16px] border px-3 py-3 transition',
                         showRemoveHint
-                          ? 'border-[color-mix(in_srgb,var(--color-red-900)_55%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_35%,transparent)]'
-                          : 'border-[var(--color-gray-700)] bg-[var(--color-gray-950)] hover:border-[var(--color-gray-600)]',
+                          ? 'border-[color-mix(in_srgb,var(--color-red-700)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_42%,transparent)]'
+                          : 'border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card)_94%,transparent)] hover:border-[var(--border-strong)]',
                       )}
                     >
                       <input
@@ -3116,11 +3135,11 @@ function App() {
                       />
                       <div className="min-w-0 flex-1 space-y-0.5">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="text-xs font-medium text-[var(--color-gray-200)]">{pane.title}</div>
-                          <div data-no-i18n className="text-[11px] text-[var(--color-gray-500)]">{modelLabel}</div>
+                          <div className="text-xs font-medium text-[var(--text-loud)]">{pane.title}</div>
+                          <div data-no-i18n className="text-[11px] text-[var(--text-faint)]">{modelLabel}</div>
                         </div>
-                        <div data-no-i18n className="truncate text-[11px] text-[var(--color-gray-500)]">{sessionLabel}</div>
-                        <div data-no-i18n className="truncate text-[11px] text-[var(--color-gray-600)]">{pane.sessionKey}</div>
+                        <div data-no-i18n className="truncate text-[11px] text-[var(--text-faint)]">{sessionLabel}</div>
+                        <div data-no-i18n className="truncate text-[11px] text-[var(--text-faint)]">{pane.sessionKey}</div>
                       </div>
                     </label>
                   )
@@ -3135,10 +3154,10 @@ function App() {
                 return (
                   <div
                     className={cn(
-                      'rounded-md border px-2.5 py-2 text-[11px] leading-5',
+                      'rounded-[16px] border px-3 py-2 text-[11px] leading-5',
                       removeCount > 0
-                        ? 'border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_40%,transparent)] text-[var(--color-red-200)]'
-                        : 'border-[color-mix(in_srgb,var(--color-blue-900)_50%,transparent)] bg-[color-mix(in_srgb,var(--color-blue-950)_30%,transparent)] text-[var(--color-blue-200)]',
+                        ? 'border-[color-mix(in_srgb,var(--color-red-700)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_42%,transparent)] text-[var(--color-red-200)]'
+                        : 'border-[color-mix(in_srgb,var(--color-blue-700)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-blue-950)_30%,transparent)] text-[var(--color-blue-200)]',
                     )}
                   >
                     {tr('app.multi_model.exit_dialog_summary', { keep: keepCount, remove: removeCount })}
@@ -3151,7 +3170,7 @@ function App() {
               <button
                 type="button"
                 disabled={isMultiModelExitProcessing}
-                className="rounded-md px-2 py-1 text-xs text-[var(--color-gray-400)] hover:text-[var(--color-gray-200)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="wb-ghost-button disabled:opacity-60"
                 onClick={closeMultiModelExitModal}
               >
                 {tr('common.cancel')}
@@ -3160,14 +3179,14 @@ function App() {
                 type="button"
                 disabled={isMultiModelExitProcessing}
                 className={cn(
-                  'inline-flex items-center gap-2 rounded-md px-3 py-1 text-xs text-[var(--color-white)] disabled:cursor-not-allowed disabled:opacity-60',
+                  'inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-60',
                   (() => {
                     const uniqueSessionKeys = Array.from(new Set(multiModelPanes.map(pane => pane.sessionKey)))
                     const keepSet = new Set(multiModelExitKeepSessionKeys)
                     const removeCount = uniqueSessionKeys.filter(key => !keepSet.has(key)).length
                     return removeCount > 0
-                      ? 'bg-[var(--color-red-600)] hover:bg-[var(--color-red-500)]'
-                      : 'bg-[var(--color-blue-600)] hover:bg-[var(--color-blue-500)]'
+                      ? 'wb-danger-button'
+                      : 'wb-primary-button'
                   })(),
                 )}
                 onClick={confirmExitMultiModelMode}
@@ -3189,18 +3208,18 @@ function App() {
 
       {renameSessionKey && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-3 md:p-4"
+          className="wb-modal-backdrop"
           onPointerDown={handleRenameSessionBackdropPointerDown}
         >
           <form
-            className="w-full max-w-sm space-y-3 rounded-lg border border-[var(--color-gray-800)] bg-[var(--color-gray-900)] p-4 shadow-2xl"
+            className="wb-modal-card w-full max-w-sm space-y-4"
             onSubmit={handleRenameSessionSubmit}
             onClick={event => event.stopPropagation()}
           >
-            <div className="text-sm font-semibold text-[var(--color-gray-100)]">{tr('app.session.rename')}</div>
+            <div className="text-sm font-semibold text-[var(--text-strong)]">{tr('app.session.rename')}</div>
 
             <div className="space-y-1">
-              <label className="text-xs text-[var(--color-gray-400)]">{tr('app.session.name')}</label>
+              <label className="text-xs text-[var(--text-faint)]">{tr('app.session.name')}</label>
               <input
                 ref={renameInputRef}
                 type="text"
@@ -3209,16 +3228,16 @@ function App() {
                   setRenameSessionName(event.target.value)
                   if (renameSessionError) setRenameSessionError(null)
                 }}
-                className="w-full rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-950)] px-2.5 py-1.5 text-xs text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+                className="wb-input"
                 placeholder={tr('app.session.name_placeholder')}
               />
-              <div className="break-all text-[11px] text-[var(--color-gray-500)]">
+              <div className="break-all text-[11px] text-[var(--text-faint)]">
                 {tr('app.session.identifier', { sessionKey: renameSessionKey })}
               </div>
             </div>
 
             {renameSessionError && (
-              <div className="rounded-md border border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_40%,transparent)] px-2.5 py-1.5 text-xs text-[var(--color-red-200)]">
+              <div className="rounded-[16px] border border-[color-mix(in_srgb,var(--color-red-700)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_42%,transparent)] px-3 py-2 text-xs text-[var(--color-red-200)]">
                 {renameSessionError}
               </div>
             )}
@@ -3226,14 +3245,14 @@ function App() {
             <div className="flex items-center justify-end gap-2 pt-1">
               <button
                 type="button"
-                className="rounded-md px-2 py-1 text-xs text-[var(--color-gray-400)] hover:text-[var(--color-gray-200)]"
+                className="wb-ghost-button"
                 onClick={closeRenameSessionModal}
               >
                 {tr('common.cancel')}
               </button>
               <button
                 type="submit"
-                className="rounded-md bg-[var(--color-blue-600)] px-3 py-1 text-xs text-[var(--color-white)] hover:bg-[var(--color-blue-500)]"
+                className="wb-primary-button"
               >
                 {tr('common.confirm')}
               </button>

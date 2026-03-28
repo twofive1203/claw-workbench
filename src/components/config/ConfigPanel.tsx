@@ -318,7 +318,7 @@ export function ConfigPanel(props: ConfigPanelProps) {
   }
 
   return (
-    <div ref={panelRef} className="flex h-full flex-col bg-gray-950">
+    <div ref={panelRef} className="flex h-full flex-col bg-[var(--surface-right-panel)] text-[var(--text-subtle)]">
       <ConfigToolbar
         configPath={configPath}
         mode={toolbarMode}
@@ -334,9 +334,9 @@ export function ConfigPanel(props: ConfigPanelProps) {
         onClose={onClose}
       />
 
-      <div className="border-b border-gray-800 bg-gray-900/70 px-4 py-2">
+      <div className="border-b border-[var(--border-default)] bg-[var(--surface-topbar)] px-4 py-3">
         <div className="flex flex-wrap items-center gap-3">
-          <label className="text-xs text-gray-400">
+          <label className="text-xs text-[var(--text-faint)]">
             {tr('config.theme_label')}
           </label>
           <ThemeSwitcher
@@ -348,7 +348,7 @@ export function ConfigPanel(props: ConfigPanelProps) {
       </div>
 
       {viewMode === 'form' && (
-        <div className="border-b border-gray-800 bg-gray-900/70 px-4 py-2">
+        <div className="border-b border-[var(--border-default)] bg-[var(--surface-topbar)] px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
             {TAB_ITEMS.map(tab => {
               const Icon = tab.icon
@@ -357,17 +357,17 @@ export function ConfigPanel(props: ConfigPanelProps) {
                 <button
                   key={tab.id}
                   type="button"
-                  className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-xs ${
+                  className={`wb-pill-button rounded-[14px] ${
                     activeTab === tab.id
-                      ? 'border-blue-500/60 bg-blue-500/10 text-blue-100'
-                      : 'border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-600'
+                      ? 'is-active border-[var(--border-accent)] bg-[var(--surface-active)] text-[var(--color-blue-200)]'
+                      : ''
                   }`}
                   onClick={() => setActiveTab(tab.id)}
                 >
                   <Icon className="h-3.5 w-3.5" />
                   {'labelKey' in tab ? tr(tab.labelKey) : tab.label}
                   {issueCount > 0 && (
-                    <span className="rounded bg-red-900/50 px-1.5 py-0.5 text-[10px] text-red-200">
+                    <span className="wb-chip-danger px-2 py-1 text-[10px]">
                       {issueCount}
                     </span>
                   )}
@@ -381,7 +381,7 @@ export function ConfigPanel(props: ConfigPanelProps) {
       {viewMode === 'form' ? (
         <div className="flex-1 overflow-y-auto px-4 py-3">
           {!ready ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-500">
+            <div className="flex h-full items-center justify-center text-sm text-[var(--text-faint)]">
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               {tr('config.init')}
             </div>
@@ -392,7 +392,7 @@ export function ConfigPanel(props: ConfigPanelProps) {
       ) : (
         <div className="flex-1 min-h-0 overflow-hidden px-4 py-3">
           {!ready ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-500">
+            <div className="flex h-full items-center justify-center text-sm text-[var(--text-faint)]">
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               {tr('config.init')}
             </div>

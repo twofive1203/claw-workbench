@@ -169,8 +169,8 @@ export function ServerSelector(props: ServerSelectorProps) {
   return (
     <div className="w-full min-w-0 space-y-2" ref={containerRef}>
       <div className="flex min-w-0 items-center gap-2">
-        <h1 className="truncate text-sm font-semibold tracking-wide text-[var(--color-gray-300)]">ClawWorkbench</h1>
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs text-[var(--color-gray-500)]">
+        <h1 className="truncate text-sm font-semibold tracking-wide text-[var(--text-strong)]">ClawWorkbench</h1>
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs text-[var(--text-faint)]">
           <span
             className={cn(
               'inline-block h-2 w-2 rounded-full',
@@ -182,14 +182,14 @@ export function ServerSelector(props: ServerSelectorProps) {
       </div>
 
       {servers.length === 0 ? (
-        <div className="space-y-2 rounded-md border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-950)_60%,transparent)] p-2.5">
-          <div className="text-xs text-[var(--color-gray-400)]">
+        <div className="wb-card rounded-[18px] p-3">
+          <div className="text-xs text-[var(--text-faint)]">
             {isReadonly ? '等待远程配置...' : '请添加一个 Gateway 服务器'}
           </div>
           {!isReadonly && (
             <button
               type="button"
-              className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2 py-1 text-xs text-[var(--color-gray-200)] hover:border-[var(--color-gray-600)]"
+              className="wb-pill-button"
               onClick={openCreateModal}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -201,33 +201,30 @@ export function ServerSelector(props: ServerSelectorProps) {
         <div className="relative">
           <button
             type="button"
-            className={cn(
-              'flex w-full items-center gap-2 rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-950)] px-2.5 py-2 text-left',
-              'text-xs text-[var(--color-gray-200)] transition-colors hover:border-[var(--color-gray-600)]',
-            )}
+            className="wb-card flex w-full items-center gap-2 rounded-[18px] px-3 py-3 text-left text-xs text-[var(--text-loud)]"
             onClick={() => setIsDropdownOpen(prev => !prev)}
           >
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium" data-no-i18n>{activeServer?.name ?? tr('server.none_selected')}</div>
-              <div className="truncate text-[11px] text-[var(--color-gray-500)]">
+              <div className="truncate text-[11px] text-[var(--text-faint)]">
                 {activeServer?.host ?? tr('server.select_first')}
               </div>
             </div>
             <ChevronDown
-              className={cn('h-4 w-4 text-[var(--color-gray-500)] transition-transform', isDropdownOpen && 'rotate-180')}
+              className={cn('h-4 w-4 text-[var(--text-faint)] transition-transform', isDropdownOpen && 'rotate-180')}
             />
           </button>
 
           {shouldShowDropdown && (
-            <div className="absolute z-20 mt-1 w-full space-y-1 rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] p-1 shadow-xl">
+            <div className="wb-command-surface absolute z-20 mt-2 w-full space-y-1 rounded-[18px] p-2">
               {servers.map(server => (
                 <div
                   key={server.id}
                   className={cn(
-                    'group flex items-center gap-1 rounded-md border px-1 py-1',
+                    'group flex items-center gap-1 rounded-[14px] border px-2 py-2',
                     activeServerId === server.id
-                      ? 'border-[color-mix(in_srgb,var(--color-blue-500)_50%,transparent)] bg-[color-mix(in_srgb,var(--color-blue-500)_10%,transparent)]'
-                      : 'border-transparent hover:border-[var(--color-gray-700)] hover:bg-[color-mix(in_srgb,var(--color-gray-800)_70%,transparent)]',
+                      ? 'border-[var(--border-accent)] bg-[var(--surface-active)]'
+                      : 'border-transparent hover:border-[var(--border-default)] hover:bg-[var(--surface-hover)]',
                   )}
                 >
                   <button
@@ -238,8 +235,8 @@ export function ServerSelector(props: ServerSelectorProps) {
                       setIsDropdownOpen(false)
                     }}
                   >
-                    <div className="truncate text-xs text-[var(--color-gray-100)]" data-no-i18n>{server.name}</div>
-                    <div className="truncate text-[11px] text-[var(--color-gray-500)]">
+                    <div className="truncate text-xs text-[var(--text-loud)]" data-no-i18n>{server.name}</div>
+                    <div className="truncate text-[11px] text-[var(--text-faint)]">
                       {server.protocol}://{server.host}
                     </div>
                   </button>
@@ -247,7 +244,7 @@ export function ServerSelector(props: ServerSelectorProps) {
                     <>
                       <button
                         type="button"
-                        className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--color-gray-400)] md:opacity-0 md:transition-opacity md:group-hover:opacity-100 hover:bg-[var(--color-gray-700)] hover:text-[var(--color-gray-200)]"
+                        className="wb-icon-button h-7 w-7 md:opacity-0 md:transition-opacity md:group-hover:opacity-100"
                         title={tr('common.edit')}
                         onClick={() => openEditModal(server)}
                       >
@@ -255,7 +252,7 @@ export function ServerSelector(props: ServerSelectorProps) {
                       </button>
                       <button
                         type="button"
-                        className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--color-gray-400)] md:opacity-0 md:transition-opacity md:group-hover:opacity-100 hover:bg-[color-mix(in_srgb,var(--color-red-900)_30%,transparent)] hover:text-[var(--color-red-300)]"
+                        className="wb-icon-button h-7 w-7 md:opacity-0 md:transition-opacity md:group-hover:opacity-100 hover:bg-[color-mix(in_srgb,var(--color-red-950)_36%,transparent)] hover:text-[var(--color-red-300)]"
                         title={tr('common.delete')}
                         onClick={() => handleDeleteServer(server)}
                       >
@@ -269,7 +266,7 @@ export function ServerSelector(props: ServerSelectorProps) {
               {!isReadonly && (
                 <button
                   type="button"
-                  className="mt-1 inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border border-dashed border-[var(--color-gray-600)] px-2 py-1.5 text-xs text-[var(--color-gray-300)] hover:border-[var(--color-gray-500)] hover:text-[var(--color-gray-100)]"
+                  className="wb-pill-button mt-1 w-full border-dashed"
                   onClick={openCreateModal}
                 >
                   <Plus className="h-3.5 w-3.5" />

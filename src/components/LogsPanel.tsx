@@ -497,12 +497,12 @@ export function LogsPanel(props: LogsPanelProps) {
   }
 
   return (
-    <div ref={panelRef} className="flex h-full flex-col bg-[var(--color-gray-950)]">
-      <div className="flex items-center justify-between border-b border-[var(--color-gray-800)] px-4 py-3">
-        <div className="text-sm font-medium text-[var(--color-gray-100)]">日志查看</div>
+    <div ref={panelRef} className="flex h-full flex-col bg-[var(--surface-right-panel)]">
+      <div className="wb-panel-header">
+        <div className="text-sm font-medium text-[var(--text-strong)]">日志查看</div>
         <button
           type="button"
-          className="rounded-md p-1 text-[var(--color-gray-400)] hover:bg-[var(--color-gray-800)] hover:text-[var(--color-gray-100)]"
+          className="wb-icon-button h-8 w-8"
           onClick={onClose}
           title="关闭"
         >
@@ -511,21 +511,21 @@ export function LogsPanel(props: LogsPanelProps) {
       </div>
 
       {!isConnected ? (
-        <div className="m-4 rounded-md border border-[color-mix(in_srgb,var(--color-yellow-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-yellow-950)_30%,transparent)] px-3 py-2 text-xs text-[var(--color-yellow-200)]">
+        <div className="m-4 rounded-[16px] border border-[color-mix(in_srgb,var(--color-yellow-900)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-yellow-950)_34%,transparent)] px-3 py-2 text-xs text-[var(--color-yellow-200)]">
           当前未连接到 Gateway，无法读取日志。
         </div>
       ) : !supportsLogsTail ? (
-        <div className="m-4 rounded-md border border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_30%,transparent)] px-3 py-2 text-xs text-[var(--color-red-200)]">
+        <div className="m-4 rounded-[16px] border border-[color-mix(in_srgb,var(--color-red-700)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_34%,transparent)] px-3 py-2 text-xs text-[var(--color-red-200)]">
           当前 Gateway 未声明 `logs.tail` 方法，暂不支持日志查看。
         </div>
       ) : (
         <>
-          <div className="space-y-2 border-b border-[var(--color-gray-800)] px-4 py-3 text-xs">
+          <div className="space-y-2 border-b border-[var(--border-default)] px-4 py-4 text-xs">
             <div className="flex flex-wrap items-center gap-2">
               <select
                 value={levelFilter}
                 onChange={e => setLevelFilter(e.target.value as LogLevelFilter)}
-                className="rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2 py-1 text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+                className="wb-select w-auto min-w-[108px]"
               >
                 <option value="all">全部级别</option>
                 <option value="trace">trace</option>
@@ -539,7 +539,7 @@ export function LogsPanel(props: LogsPanelProps) {
               <select
                 value={subsystemFilter}
                 onChange={e => setSubsystemFilter(e.target.value)}
-                className="max-w-[220px] rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2 py-1 text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+                className="wb-select max-w-[220px]"
               >
                 <option value="all">全部子系统</option>
                 {subsystemOptions.map(item => (
@@ -550,7 +550,7 @@ export function LogsPanel(props: LogsPanelProps) {
               <select
                 value={moduleFilter}
                 onChange={e => setModuleFilter(e.target.value)}
-                className="max-w-[220px] rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2 py-1 text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+                className="wb-select max-w-[220px]"
               >
                 <option value="all">全部模块</option>
                 {moduleOptions.map(item => (
@@ -559,26 +559,26 @@ export function LogsPanel(props: LogsPanelProps) {
               </select>
 
               <div className="relative min-w-0 flex-1">
-                <Search className="pointer-events-none absolute left-2 top-1.5 h-3.5 w-3.5 text-[var(--color-gray-500)]" />
+                <Search className="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-[var(--text-faint)]" />
                 <input
                   type="text"
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   placeholder="搜索日志（消息/子系统/模块/路径）..."
-                  className="w-full rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] py-1 pl-7 pr-2 text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+                  className="wb-input py-2 pl-9"
                 />
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex overflow-hidden rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)]">
+              <div className="inline-flex overflow-hidden rounded-full border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card)_94%,transparent)]">
                 <button
                   type="button"
                   className={cn(
-                    'px-2 py-1 text-[var(--color-gray-300)]',
+                    'px-3 py-1.5 text-[var(--text-subtle)]',
                     viewMode === 'table'
-                      ? 'bg-[var(--color-gray-800)] text-[var(--color-gray-100)]'
-                      : 'hover:bg-[var(--color-gray-800)]',
+                      ? 'bg-[var(--surface-hover)] text-[var(--text-strong)]'
+                      : 'hover:bg-[var(--surface-hover)]',
                   )}
                   onClick={() => setViewMode('table')}
                 >
@@ -587,10 +587,10 @@ export function LogsPanel(props: LogsPanelProps) {
                 <button
                   type="button"
                   className={cn(
-                    'border-l border-[var(--color-gray-700)] px-2 py-1 text-[var(--color-gray-300)]',
+                    'border-l border-[var(--border-default)] px-3 py-1.5 text-[var(--text-subtle)]',
                     viewMode === 'json'
-                      ? 'bg-[var(--color-gray-800)] text-[var(--color-gray-100)]'
-                      : 'hover:bg-[var(--color-gray-800)]',
+                      ? 'bg-[var(--surface-hover)] text-[var(--text-strong)]'
+                      : 'hover:bg-[var(--surface-hover)]',
                   )}
                   onClick={() => setViewMode('json')}
                 >
@@ -600,7 +600,7 @@ export function LogsPanel(props: LogsPanelProps) {
 
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2 py-1 text-[var(--color-gray-200)] hover:border-[var(--color-gray-600)]"
+                className="wb-pill-button"
                 onClick={handleRefresh}
               >
                 <RefreshCw className="h-3.5 w-3.5" />
@@ -608,13 +608,13 @@ export function LogsPanel(props: LogsPanelProps) {
               </button>
               <button
                 type="button"
-                className="rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2 py-1 text-[var(--color-gray-200)] hover:border-[var(--color-gray-600)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="wb-pill-button"
                 onClick={handleExport}
                 disabled={filteredEntries.length === 0}
               >
                 导出
               </button>
-              <label className="inline-flex items-center gap-1 text-[var(--color-gray-400)]">
+              <label className="inline-flex items-center gap-1 text-[var(--text-faint)]">
                 <input
                   type="checkbox"
                   checked={autoFollow}
@@ -623,10 +623,10 @@ export function LogsPanel(props: LogsPanelProps) {
                 />
                 自动拉取并滚动
               </label>
-              {(isLoading || isPolling) && <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--color-gray-500)]" />}
+              {(isLoading || isPolling) && <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--text-faint)]" />}
             </div>
 
-            <div className="space-y-0.5 text-[11px] text-[var(--color-gray-500)]">
+            <div className="space-y-0.5 text-[11px] text-[var(--text-faint)]">
               <div>
                 文件:
                 {' '}
@@ -665,7 +665,7 @@ export function LogsPanel(props: LogsPanelProps) {
           </div>
 
           {errorText && (
-            <div className="mx-4 mt-3 rounded-md border border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_30%,transparent)] px-3 py-2 text-xs text-[var(--color-red-200)]">
+            <div className="mx-4 mt-3 rounded-[16px] border border-[color-mix(in_srgb,var(--color-red-700)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_34%,transparent)] px-3 py-2 text-xs text-[var(--color-red-200)]">
               {errorText}
             </div>
           )}
@@ -673,16 +673,16 @@ export function LogsPanel(props: LogsPanelProps) {
           <div
             ref={listContainerRef}
             className={cn(
-              'flex-1 overflow-y-auto px-4 py-3 font-mono text-[11px]',
+              'flex-1 overflow-y-auto px-4 py-4 font-mono text-[11px]',
               viewMode === 'json' && 'space-y-2',
             )}
           >
             {filteredEntries.length === 0 && !isLoading ? (
-              <div className="rounded-md border border-dashed border-[var(--color-gray-700)] bg-[color-mix(in_srgb,var(--color-gray-900)_30%,transparent)] px-3 py-6 text-center text-[var(--color-gray-500)]">
+              <div className="wb-empty-state px-3 py-6 text-center">
                 暂无可展示日志
               </div>
             ) : viewMode === 'table' ? (
-              <div className="overflow-x-auto rounded-md border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-900)_45%,transparent)]">
+              <div className="overflow-x-auto rounded-[18px] border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card)_94%,transparent)]">
                 <table className="min-w-[900px] w-full border-collapse">
                   <thead className="sticky top-0 bg-[var(--color-gray-900)] text-[10px] uppercase tracking-wide text-[var(--color-gray-500)]">
                     <tr>

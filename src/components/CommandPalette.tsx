@@ -95,10 +95,10 @@ export function CommandPalette({
       className="absolute bottom-full left-0 right-0 mb-2 animate-in fade-in slide-in-from-bottom-2 duration-200"
       onKeyDown={handleKeyDown}
     >
-      <div className="mx-auto max-w-4xl rounded-xl border border-[var(--color-gray-700)] bg-[color-mix(in_srgb,var(--color-gray-900)_95%,transparent)] shadow-2xl backdrop-blur-sm">
+      <div className="wb-command-surface mx-auto max-w-4xl rounded-[22px]">
         <div
           ref={listRef}
-          className="max-h-80 overflow-y-auto p-2"
+          className="max-h-80 overflow-y-auto p-2.5"
         >
           <div className="space-y-1">
             {commands.map((command, index) => {
@@ -117,10 +117,10 @@ export function CommandPalette({
                   ref={isSelected ? selectedItemRef : null}
                   type="button"
                   className={cn(
-                    'flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
+                    'flex w-full items-start gap-3 rounded-[16px] px-3 py-3 text-left transition-colors',
                     isSelected
-                      ? 'bg-[color-mix(in_srgb,var(--color-blue-600)_20%,transparent)] ring-1 ring-[color-mix(in_srgb,var(--color-blue-500)_50%,transparent)]'
-                      : 'hover:bg-[color-mix(in_srgb,var(--color-gray-800)_60%,transparent)]',
+                      ? 'bg-[var(--surface-active)] ring-1 ring-[var(--border-accent)]'
+                      : 'hover:bg-[var(--surface-hover)]',
                   )}
                   onClick={() => onSelectCommand(command)}
                   onMouseEnter={() => onSelectIndex(index)}
@@ -131,7 +131,7 @@ export function CommandPalette({
                       <span
                         className={cn(
                           'font-mono text-sm font-medium',
-                          isSelected ? 'text-[var(--color-blue-300)]' : 'text-[var(--color-gray-200)]',
+                          isSelected ? 'text-[var(--color-blue-200)]' : 'text-[var(--text-loud)]',
                         )}
                       >
                         /{command.name}
@@ -142,13 +142,13 @@ export function CommandPalette({
                         </span>
                       )}
                       {command.parameters && command.parameters.length > 0 && (
-                        <span className="font-mono text-xs text-[var(--color-gray-500)]">
+                        <span className="font-mono text-xs text-[var(--text-faint)]">
                           {command.parameters
                             .filter(p => p.required)
                             .map(p => `<${p.name}>`)
                             .join(' ')}
                           {command.parameters.some(p => !p.required) && (
-                            <span className="ml-1 text-[var(--color-gray-600)]">
+                              <span className="ml-1 text-[var(--text-faint)]">
                               {command.parameters
                                 .filter(p => !p.required)
                                 .map(p => `[${p.name}]`)
@@ -158,7 +158,7 @@ export function CommandPalette({
                         </span>
                       )}
                     </div>
-                    <div className="mt-0.5 text-xs text-[var(--color-gray-400)]">
+                    <div className="mt-0.5 text-xs text-[var(--text-faint)]">
                       {command.description}
                     </div>
                     {command.aliases && command.aliases.length > 0 && (
@@ -170,7 +170,7 @@ export function CommandPalette({
                               'rounded px-1.5 py-0.5 font-mono text-[10px]',
                               alias === matchedAlias
                                 ? 'bg-[color-mix(in_srgb,var(--color-amber-500)_20%,transparent)] text-[var(--color-amber-300)]'
-                                : 'bg-[color-mix(in_srgb,var(--color-gray-800)_60%,transparent)] text-[var(--color-gray-500)]'
+                                : 'bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] text-[var(--text-faint)]'
                             )}
                           >
                             /{alias}
@@ -184,24 +184,24 @@ export function CommandPalette({
             })}
           </div>
         </div>
-        <div className="hidden items-center border-t border-[var(--color-gray-800)] px-3 py-2 text-[11px] text-[var(--color-gray-500)] md:flex">
+        <div className="hidden items-center border-t border-[var(--border-default)] px-3 py-2 text-[11px] text-[var(--text-faint)] md:flex">
           <span className="inline-flex items-center gap-1">
-            <kbd className="rounded bg-[var(--color-gray-800)] px-1.5 py-0.5 font-mono">↑↓</kbd>
+            <kbd className="rounded bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] px-1.5 py-0.5 font-mono">↑↓</kbd>
             导航
           </span>
           <span className="mx-2">·</span>
           <span className="inline-flex items-center gap-1">
-            <kbd className="rounded bg-[var(--color-gray-800)] px-1.5 py-0.5 font-mono">Tab</kbd>
-            <kbd className="rounded bg-[var(--color-gray-800)] px-1.5 py-0.5 font-mono">Enter</kbd>
+            <kbd className="rounded bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] px-1.5 py-0.5 font-mono">Tab</kbd>
+            <kbd className="rounded bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] px-1.5 py-0.5 font-mono">Enter</kbd>
             选择
           </span>
           <span className="mx-2">·</span>
           <span className="inline-flex items-center gap-1">
-            <kbd className="rounded bg-[var(--color-gray-800)] px-1.5 py-0.5 font-mono">Esc</kbd>
+            <kbd className="rounded bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] px-1.5 py-0.5 font-mono">Esc</kbd>
             关闭
           </span>
         </div>
-        <div className="border-t border-[var(--color-gray-800)] px-3 py-2 text-[11px] text-[var(--color-gray-500)] md:hidden">
+        <div className="border-t border-[var(--border-default)] px-3 py-2 text-[11px] text-[var(--text-faint)] md:hidden">
           点击选择命令
         </div>
       </div>

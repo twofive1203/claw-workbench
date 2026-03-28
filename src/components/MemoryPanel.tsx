@@ -194,15 +194,15 @@ export function MemoryPanel(props: MemoryPanelProps) {
   )
 
   return (
-    <div ref={panelRef} className="flex h-full flex-col bg-[var(--color-gray-950)]">
-      <div className="flex items-center justify-between border-b border-[var(--color-gray-800)] px-4 py-3">
+    <div ref={panelRef} className="flex h-full flex-col bg-[var(--surface-right-panel)]">
+      <div className="wb-panel-header">
         <div className="flex items-center gap-1.5">
           <Brain className="h-4 w-4 text-[var(--color-purple-300)]" />
-          <span className="text-sm font-medium text-[var(--color-gray-100)]">{titleText}</span>
+          <span className="text-sm font-medium text-[var(--text-strong)]">{titleText}</span>
         </div>
         <button
           type="button"
-          className="rounded-md p-1 text-[var(--color-gray-400)] hover:bg-[var(--color-gray-800)] hover:text-[var(--color-gray-100)]"
+          className="wb-icon-button h-8 w-8"
           onClick={onClose}
           title={tr('common.close')}
         >
@@ -210,44 +210,44 @@ export function MemoryPanel(props: MemoryPanelProps) {
         </button>
       </div>
 
-      <div className="border-b border-[var(--color-gray-800)] px-4 py-3">
+      <div className="border-b border-[var(--border-default)] px-4 py-4">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-[var(--color-gray-500)]" />
+          <Search className="pointer-events-none absolute left-3 top-3 h-3.5 w-3.5 text-[var(--text-faint)]" />
           <input
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder={tr('memory.search_placeholder')}
-            className="w-full rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] py-2 pl-8 pr-2.5 text-xs text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+            className="wb-input pl-9"
           />
         </div>
-        <div className="mt-2 text-[11px] text-[var(--color-gray-500)]">
+        <div className="mt-2 text-[11px] text-[var(--text-faint)]">
           {tr('memory.total_files', { count: total })}
         </div>
-        <div className="mt-1 text-[11px] text-[var(--color-gray-600)]">
+        <div className="mt-1 text-[11px] text-[var(--text-faint)]">
           {tr('memory.gateway_note')}
         </div>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto px-4 py-3">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {errorText && (
-          <div className="rounded-md border border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_30%,transparent)] px-3 py-2 text-xs text-[var(--color-red-200)]">
+          <div className="wb-card rounded-[16px] border-[color-mix(in_srgb,var(--color-red-700)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_42%,transparent)] px-3 py-2 text-xs text-[var(--color-red-200)]">
             {errorText}
           </div>
         )}
 
         {entries.length === 0 && !isLoading && (
-          <div className="rounded-md border border-dashed border-[var(--color-gray-700)] bg-[color-mix(in_srgb,var(--color-gray-900)_30%,transparent)] px-3 py-6 text-center text-xs text-[var(--color-gray-500)]">
+          <div className="wb-empty-state px-3 py-6 text-center text-xs">
             {tr('memory.empty')}
           </div>
         )}
 
         {entries.map(entry => (
-          <div key={entry.id} className="rounded-md border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-900)_60%,transparent)] p-2.5 text-xs">
-            <div data-no-i18n className="mb-1 whitespace-pre-wrap break-words text-[var(--color-gray-200)]">{entry.content}</div>
-            <div className="mb-1 flex flex-wrap items-center gap-1 text-[11px] text-[var(--color-gray-500)]">
+          <div key={entry.id} className="wb-card rounded-[18px] p-3 text-xs">
+            <div data-no-i18n className="mb-1 whitespace-pre-wrap break-words text-[var(--text-loud)]">{entry.content}</div>
+            <div className="mb-1 flex flex-wrap items-center gap-1 text-[11px] text-[var(--text-faint)]">
               {entry.tags?.map(tag => (
-                <span key={tag} className="rounded bg-[var(--color-gray-800)] px-1.5 py-0.5 text-[10px] text-[var(--color-gray-300)]">
+                <span key={tag} className="wb-chip-muted px-2 py-1 text-[10px]">
                   {tag}
                 </span>
               ))}
@@ -270,7 +270,7 @@ export function MemoryPanel(props: MemoryPanelProps) {
             <div className="flex items-center justify-end">
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-md border border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_30%,transparent)] px-2 py-1 text-[11px] text-[var(--color-red-200)] hover:bg-[color-mix(in_srgb,var(--color-red-900)_30%,transparent)]"
+                className="wb-mini-button border-[color-mix(in_srgb,var(--color-red-700)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_42%,transparent)] text-[var(--color-red-200)]"
                 onClick={() => void handleDelete(entry)}
               >
                 <Trash2 className="h-3 w-3" />
@@ -281,11 +281,11 @@ export function MemoryPanel(props: MemoryPanelProps) {
         ))}
       </div>
 
-      <div className="border-t border-[var(--color-gray-800)] px-4 py-3">
+      <div className="border-t border-[var(--border-default)] px-4 py-4">
         <button
           type="button"
           disabled={!hasMore || isLoading}
-          className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2 py-1.5 text-xs text-[var(--color-gray-200)] hover:border-[var(--color-gray-600)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="wb-pill-button w-full"
           onClick={() => void loadList(offset, true)}
         >
           {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}

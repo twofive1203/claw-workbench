@@ -115,11 +115,11 @@ export function MultiModelConversationPane(props: MultiModelConversationPaneProp
   useLocalizedSubtree(paneRef)
 
   return (
-    <section ref={paneRef} className="flex min-h-[320px] flex-col overflow-hidden rounded-xl border border-[var(--color-gray-800)] bg-[var(--color-gray-900)]">
-      <header className="flex flex-wrap items-center gap-2 border-b border-[var(--color-gray-800)] px-3 py-2">
+    <section ref={paneRef} className="wb-card-strong flex min-h-[360px] flex-col overflow-hidden rounded-[22px]">
+      <header className="flex flex-wrap items-center gap-2 border-b border-[var(--border-default)] px-4 py-3">
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold text-[var(--color-gray-100)]">{title}</div>
-          <div data-no-i18n className="truncate text-[11px] text-[var(--color-gray-500)]">
+          <div className="truncate text-sm font-semibold text-[var(--text-strong)]">{title}</div>
+          <div data-no-i18n className="truncate text-[11px] text-[var(--text-faint)]">
             {session?.displayName ?? session?.key ?? '未命名会话'}
           </div>
         </div>
@@ -127,7 +127,7 @@ export function MultiModelConversationPane(props: MultiModelConversationPaneProp
         <select
           value={selectedModel}
           onChange={(event) => onSelectModel(event.target.value)}
-          className="min-w-[140px] rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-950)] px-2 py-1 text-xs text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+          className="wb-select min-w-[156px]"
         >
           <option value="">默认模型</option>
           {modelOptions.map((model) => (
@@ -139,7 +139,7 @@ export function MultiModelConversationPane(props: MultiModelConversationPaneProp
 
         <button
           type="button"
-          className="rounded-md border border-[var(--color-gray-700)] px-2 py-1 text-xs text-[var(--color-gray-300)] hover:border-[var(--color-gray-500)] hover:text-[var(--color-gray-100)]"
+          className="wb-mini-button"
           onClick={onFocus}
         >
           聚焦
@@ -149,10 +149,10 @@ export function MultiModelConversationPane(props: MultiModelConversationPaneProp
           type="button"
           disabled={!isTyping}
           className={cn(
-            'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs transition',
+            'wb-mini-button',
             isTyping
-              ? 'border-[var(--color-orange-700)] text-[var(--color-orange-200)] hover:border-[var(--color-orange-500)]'
-              : 'cursor-not-allowed border-[var(--color-gray-800)] text-[var(--color-gray-600)]',
+              ? 'border-[color-mix(in_srgb,var(--color-orange-500)_30%,transparent)] text-[var(--color-orange-200)]'
+              : '',
           )}
           onClick={onAbort}
         >
@@ -161,18 +161,18 @@ export function MultiModelConversationPane(props: MultiModelConversationPaneProp
         </button>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4">
         {isLoadingHistory && messages.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center gap-2 text-sm text-[var(--color-gray-500)]">
+          <div className="flex flex-1 items-center justify-center gap-2 text-sm text-[var(--text-faint)]">
             <Loader2 className="h-4 w-4 animate-spin" />
             加载会话中
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-[var(--color-gray-600)]">
+          <div className="wb-empty-state flex flex-1 items-center justify-center px-4 text-sm">
             发送一条消息开始多模型对比
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {messages.map((message) => {
               const isUserMessage = message.role === 'user'
               const isSystemMessage = message.role === 'system'
@@ -181,8 +181,8 @@ export function MultiModelConversationPane(props: MultiModelConversationPaneProp
 
               return (
                 <article key={message.id} className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-[var(--color-gray-500)]">
-                    <span className="font-medium text-[var(--color-gray-300)]">{resolvePaneRoleLabel(message.role)}</span>
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-faint)]">
+                    <span className="font-medium text-[var(--text-subtle)]">{resolvePaneRoleLabel(message.role)}</span>
                     <span>{formatPaneMessageTime(message.timestamp)}</span>
                     {messageModel && <span>{messageModel}</span>}
                     {message.speakerName && !isUserMessage && <span data-no-i18n>{message.speakerName}</span>}
@@ -190,12 +190,12 @@ export function MultiModelConversationPane(props: MultiModelConversationPaneProp
 
                   <div
                     className={cn(
-                      'rounded-2xl px-3 py-2 text-sm leading-6',
+                      'rounded-[20px] border px-4 py-3 text-sm leading-6 shadow-[var(--inset-highlight)]',
                       isUserMessage
-                        ? 'bg-user-bubble text-user-bubble-foreground'
+                        ? 'border-[color-mix(in_srgb,var(--color-blue-500)_32%,transparent)] bg-user-bubble text-user-bubble-foreground'
                         : isSystemMessage
-                          ? 'border border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_45%,transparent)] text-[var(--color-red-200)]'
-                          : 'bg-[var(--color-gray-800)] text-[var(--color-gray-100)]',
+                          ? 'border-[color-mix(in_srgb,var(--color-red-700)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_48%,transparent)] text-[var(--color-red-200)]'
+                          : 'border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card)_94%,transparent)] text-[var(--text-strong)]',
                     )}
                   >
                     {message.content.trim().length > 0 ? (
@@ -218,17 +218,17 @@ export function MultiModelConversationPane(props: MultiModelConversationPaneProp
                         </div>
                       )
                     ) : (
-                      <div className="text-[var(--color-gray-500)]">{assistantName} 正在输出…</div>
+                      <div className="text-[var(--text-faint)]">{assistantName} 正在输出…</div>
                     )}
 
                     {images.length > 0 && (
-                      <div className="mt-2 grid grid-cols-1 gap-2">
+                      <div className="mt-3 grid grid-cols-1 gap-2">
                         {images.map((image) => (
                           <img
                             key={`${message.id}-${image.src}`}
                             src={image.src}
                             alt={image.alt}
-                            className="max-h-64 rounded-lg border border-[var(--color-gray-700)] object-contain"
+                            className="max-h-64 rounded-2xl border border-[var(--border-default)] object-contain shadow-[var(--shadow-soft)]"
                           />
                         ))}
                       </div>
@@ -247,7 +247,7 @@ export function MultiModelConversationPane(props: MultiModelConversationPaneProp
             })}
 
             {isTyping && (
-              <div className="rounded-2xl bg-[var(--color-gray-800)] px-3 py-2 text-sm text-[var(--color-gray-400)]">
+              <div className="rounded-[20px] border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card)_94%,transparent)] px-4 py-3 text-sm text-[var(--text-faint)]">
                 <span className="typing-dots">{assistantName} 思考中</span>
               </div>
             )}

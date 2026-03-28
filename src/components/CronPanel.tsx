@@ -200,15 +200,18 @@ export function CronPanel(props: CronPanelProps) {
   )
 
   return (
-    <div ref={panelRef} className="flex h-full flex-col bg-[var(--color-gray-950)]">
-      <div className="flex items-center justify-between border-b border-[var(--color-gray-800)] px-4 py-3">
-        <div className="flex items-center gap-1.5">
-          <Clock3 className="h-4 w-4 text-[var(--color-blue-300)]" />
-          <span className="text-sm font-medium text-[var(--color-gray-100)]">{tr('定时任务')}</span>
+    <div ref={panelRef} className="flex h-full flex-col bg-[var(--surface-right-panel)] text-[var(--text-subtle)]">
+      <div className="wb-panel-header">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Clock3 className="h-4 w-4 text-[var(--color-blue-300)]" />
+            <span className="wb-panel-title">{tr('定时任务')}</span>
+          </div>
+          <p className="wb-panel-subtitle mt-1">{tr('管理计划任务、手动运行和查看执行记录。')}</p>
         </div>
         <button
           type="button"
-          className="rounded-md p-1 text-[var(--color-gray-400)] hover:bg-[var(--color-gray-800)] hover:text-[var(--color-gray-100)]"
+          className="wb-icon-button h-8 w-8"
           onClick={onClose}
           title={tr('关闭')}
         >
@@ -216,8 +219,17 @@ export function CronPanel(props: CronPanelProps) {
         </button>
       </div>
 
-      <div className="space-y-2 border-b border-[var(--color-gray-800)] px-4 py-3 text-xs">
-        <div className="grid grid-cols-2 gap-2">
+      <div className="space-y-4 overflow-y-auto px-4 py-4 text-xs">
+        <section className="wb-card-strong space-y-3 rounded-[20px] p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs font-medium tracking-[0.16em] text-[var(--text-faint)]">SCHEDULER</div>
+              <div className="mt-1 text-sm text-[var(--text-loud)]">{formJobId ? tr('编辑任务') : tr('创建任务')}</div>
+            </div>
+            <span className="wb-chip-muted">{tr('运行中')}: {runningCount}</span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           <input
             type="text"
             value={label}
@@ -226,7 +238,7 @@ export function CronPanel(props: CronPanelProps) {
               if (formError) setFormError(null)
             }}
             placeholder={tr('任务名称（可选）')}
-            className="rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2.5 py-1.5 text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+            className="wb-input"
           />
           <input
             type="text"
@@ -236,97 +248,96 @@ export function CronPanel(props: CronPanelProps) {
               if (formError) setFormError(null)
             }}
             placeholder="*/30 * * * *"
-            className="rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2.5 py-1.5 text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
+            className="wb-input"
           />
-        </div>
+          </div>
 
-        <select
-          value={agentId}
-          onChange={e => setAgentId(e.target.value)}
-          className="w-full rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2.5 py-1.5 text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
-        >
-          <option value="">{tr('默认 Agent')}</option>
-          {agents.map(agent => (
-            <option key={agent.id} value={agent.id}>
-              {agent.name ?? agent.id}
-            </option>
-          ))}
-        </select>
+          <select
+            value={agentId}
+            onChange={e => setAgentId(e.target.value)}
+            className="wb-select"
+          >
+            <option value="">{tr('默认 Agent')}</option>
+            {agents.map(agent => (
+              <option key={agent.id} value={agent.id}>
+                {agent.name ?? agent.id}
+              </option>
+            ))}
+          </select>
 
-        <textarea
-          rows={3}
-          value={message}
-          onChange={e => {
-            setMessage(e.target.value)
-            if (formError) setFormError(null)
-          }}
-          placeholder={tr('发送给 Agent 的消息...')}
-          className="w-full resize-none rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2.5 py-1.5 text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]"
-        />
+          <textarea
+            rows={3}
+            value={message}
+            onChange={e => {
+              setMessage(e.target.value)
+              if (formError) setFormError(null)
+            }}
+            placeholder={tr('发送给 Agent 的消息...')}
+            className="wb-textarea"
+          />
 
-        <div className="flex items-center justify-between">
-          <label className="inline-flex items-center gap-1 text-[var(--color-gray-300)]">
-            <input
-              type="checkbox"
-              checked={enabled}
-              onChange={e => setEnabled(e.target.checked)}
-              className="accent-[var(--color-blue-500)]"
-            />
-            {tr('启用任务')}
-          </label>
-          <div className="flex items-center gap-1.5">
-            {formJobId && (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <label className="inline-flex items-center gap-2 text-[var(--text-subtle)]">
+              <input
+                type="checkbox"
+                checked={enabled}
+                onChange={e => setEnabled(e.target.checked)}
+                className="accent-[var(--color-blue-500)]"
+              />
+              {tr('启用任务')}
+            </label>
+            <div className="flex items-center gap-1.5">
+              {formJobId && (
+                <button
+                  type="button"
+                  className="wb-ghost-button"
+                  onClick={resetForm}
+                >
+                  {tr('取消编辑')}
+                </button>
+              )}
               <button
                 type="button"
-                className="rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2 py-1 text-[var(--color-gray-200)] hover:border-[var(--color-gray-600)]"
-                onClick={resetForm}
+                className="wb-primary-button"
+                onClick={() => void handleSave()}
               >
-                {tr('取消编辑')}
+                {formJobId ? <Pencil className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                {formJobId ? tr('更新任务') : tr('创建任务')}
               </button>
-            )}
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 rounded-md bg-[var(--color-blue-600)] px-2 py-1 text-[var(--color-white)] hover:bg-[var(--color-blue-500)]"
-              onClick={() => void handleSave()}
-            >
-              {formJobId ? <Pencil className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-              {formJobId ? tr('更新任务') : tr('创建任务')}
-            </button>
+            </div>
           </div>
-        </div>
 
-        {formError && (
-          <div className="rounded-md border border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_40%,transparent)] px-2.5 py-1.5 text-[11px] text-[var(--color-red-200)]">
-            {formError}
+          {formError && (
+            <div className="wb-card rounded-[16px] border-[color-mix(in_srgb,var(--color-red-700)_32%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_48%,transparent)] px-3 py-2 text-[11px] text-[var(--color-red-200)]">
+              {formError}
+            </div>
+          )}
+
+          <div className="wb-inline-note rounded-[16px] px-3 py-2 text-[11px] text-[var(--text-muted)]">
+            {tr('模板: */30 * * * *（每 30 分钟） | 0 * * * *（每小时） | 0 8 * * *（每天 8 点）')}
           </div>
-        )}
+        </section>
 
-        <div className="rounded-md border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-900)_50%,transparent)] px-2.5 py-1.5 text-[11px] text-[var(--color-gray-500)]">
-          {tr('模板: */30 * * * *（每 30 分钟） | 0 * * * *（每小时） | 0 8 * * *（每天 8 点）')}
-        </div>
-      </div>
-
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3 text-xs">
-        <div className="rounded-md border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-900)_60%,transparent)] p-2.5">
-          <div className="mb-2 flex items-center justify-between text-[var(--color-gray-400)]">
+        <section className="wb-card rounded-[20px] p-4">
+          <div className="mb-3 flex items-center justify-between text-[var(--text-faint)]">
             <span>{tr('任务列表')} ({jobs.length})</span>
             {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           </div>
           {jobs.length === 0 ? (
-            <div className="rounded-md border border-dashed border-[var(--color-gray-700)] bg-[color-mix(in_srgb,var(--color-gray-950)_60%,transparent)] px-3 py-4 text-center text-[var(--color-gray-500)]">
+            <div className="wb-empty-state rounded-[16px] px-3 py-4 text-center">
               {tr('暂无定时任务')}
             </div>
           ) : (
             <div className="space-y-2">
               {jobs.map(job => (
-                <div key={job.jobId} className="rounded-md border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-950)_60%,transparent)] p-2">
+                <div key={job.jobId} className="wb-card rounded-[16px] p-3">
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="truncate text-[var(--color-gray-200)]">{job.label ?? job.jobId}</span>
-                    <span className={job.enabled ? 'text-[var(--color-green-300)]' : 'text-[var(--color-red-300)]'}>
+                    <span className="truncate text-[var(--text-loud)]">{job.label ?? job.jobId}</span>
+                    <span className={job.enabled ? 'wb-chip-success' : 'wb-chip-danger'}>
                       {job.enabled ? tr('启用') : tr('停用')}
                     </span>
                   </div>
-                  <div className="space-y-0.5 text-[11px] text-[var(--color-gray-500)]">
+                  <div className="space-y-1 text-[11px] text-[var(--text-faint)]">
                     <div>
                       cron:
                       {' '}
@@ -346,7 +357,7 @@ export function CronPanel(props: CronPanelProps) {
                   <div className="mt-2 flex items-center justify-end gap-1.5">
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1 rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2 py-1 text-[11px] text-[var(--color-gray-200)] hover:border-[var(--color-gray-600)]"
+                      className="wb-mini-button"
                       onClick={() => void handleRun(job)}
                     >
                       <Play className="h-3 w-3" />
@@ -354,7 +365,7 @@ export function CronPanel(props: CronPanelProps) {
                     </button>
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1 rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2 py-1 text-[11px] text-[var(--color-gray-200)] hover:border-[var(--color-gray-600)]"
+                      className="wb-mini-button"
                       onClick={() => handleEdit(job)}
                     >
                       <Pencil className="h-3 w-3" />
@@ -362,7 +373,7 @@ export function CronPanel(props: CronPanelProps) {
                     </button>
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1 rounded-md border border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_40%,transparent)] px-2 py-1 text-[11px] text-[var(--color-red-200)] hover:bg-[color-mix(in_srgb,var(--color-red-900)_30%,transparent)]"
+                      className="wb-mini-button border-[color-mix(in_srgb,var(--color-red-700)_32%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_48%,transparent)] text-[var(--color-red-200)]"
                       onClick={() => void handleRemove(job)}
                     >
                       <Trash2 className="h-3 w-3" />
@@ -373,10 +384,10 @@ export function CronPanel(props: CronPanelProps) {
               ))}
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="rounded-md border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-900)_60%,transparent)] p-2.5">
-          <div className="mb-2 text-[var(--color-gray-400)]">
+        <section className="wb-card rounded-[20px] p-4">
+          <div className="mb-3 text-[var(--text-faint)]">
             {tr('运行历史')} (
             {runs.length}
             )
@@ -386,18 +397,18 @@ export function CronPanel(props: CronPanelProps) {
             {runningCount}
           </div>
           {runs.length === 0 ? (
-            <div className="text-[var(--color-gray-500)]">{tr('暂无运行记录')}</div>
+            <div className="wb-empty-state rounded-[16px] px-3 py-4 text-center">{tr('暂无运行记录')}</div>
           ) : (
             <div className="space-y-1.5">
               {runs.map(run => (
-                <div key={run.runId} className="rounded border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-950)_60%,transparent)] px-2 py-1.5 text-[11px]">
+                <div key={run.runId} className="wb-card rounded-[14px] px-3 py-2 text-[11px]">
                   <div className="mb-0.5 flex items-center justify-between">
-                    <span className="truncate text-[var(--color-gray-200)]">{run.jobId}</span>
-                    <span className={run.status === 'error' ? 'text-[var(--color-red-300)]' : run.status === 'success' ? 'text-[var(--color-green-300)]' : 'text-[var(--color-blue-300)]'}>
+                    <span className="truncate text-[var(--text-loud)]">{run.jobId}</span>
+                    <span className={run.status === 'error' ? 'wb-chip-danger' : run.status === 'success' ? 'wb-chip-success' : 'wb-chip-muted'}>
                       {run.status}
                     </span>
                   </div>
-                  <div className="text-[var(--color-gray-500)]">
+                  <div className="text-[var(--text-faint)]">
                     {formatDateTime(run.startedAt)}
                     {' '}
                     -&gt;
@@ -409,7 +420,7 @@ export function CronPanel(props: CronPanelProps) {
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
 
       {pendingDeleteJob && (

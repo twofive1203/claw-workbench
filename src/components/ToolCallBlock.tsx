@@ -84,13 +84,13 @@ export function ToolCallBlock(props: ToolCallBlockProps) {
   const title = getToolDisplayName(call.name)
 
   return (
-    <div ref={blockRef} className="rounded-lg border border-[color-mix(in_srgb,var(--color-gray-700)_80%,transparent)] bg-[color-mix(in_srgb,var(--color-gray-900)_70%,transparent)] p-2.5 text-xs text-[var(--color-gray-200)]">
+    <div ref={blockRef} className="wb-card rounded-[18px] p-3 text-xs text-[var(--text-subtle)]">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
-          <Wrench className="h-3.5 w-3.5 shrink-0 text-[var(--color-gray-400)]" />
-          <span className="truncate font-medium text-[var(--color-gray-100)]">{title}</span>
+          <Wrench className="h-3.5 w-3.5 shrink-0 text-[var(--text-faint)]" />
+          <span className="truncate font-medium text-[var(--text-strong)]">{title}</span>
         </div>
-        <div className="inline-flex items-center gap-1 text-[11px] text-[var(--color-gray-400)]">
+        <div className="inline-flex items-center gap-1 text-[11px] text-[var(--text-faint)]">
           {call.phase === 'result' ? (
             hasError ? <X className="h-3.5 w-3.5 text-[var(--color-red-400)]" /> : <Check className="h-3.5 w-3.5 text-[var(--color-green-400)]" />
           ) : (
@@ -101,12 +101,12 @@ export function ToolCallBlock(props: ToolCallBlockProps) {
       </div>
 
       {argsText && (
-        <div className="mb-1.5 rounded-md border border-[color-mix(in_srgb,var(--color-gray-700)_60%,transparent)] bg-[color-mix(in_srgb,var(--color-gray-950)_80%,transparent)] p-2">
+        <div className="mb-2 rounded-[14px] border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card-strong)_94%,transparent)] p-2.5">
           <button
             type="button"
             className={cn(
-              'mb-1 inline-flex items-center gap-1 text-[11px] text-[var(--color-gray-400)]',
-              argsLines > PREVIEW_MAX_LINES ? 'cursor-pointer hover:text-[var(--color-gray-200)]' : 'cursor-default',
+              'mb-1 inline-flex items-center gap-1 text-[11px] text-[var(--text-faint)]',
+              argsLines > PREVIEW_MAX_LINES ? 'cursor-pointer hover:text-[var(--text-strong)]' : 'cursor-default',
             )}
             onClick={() => argsLines > PREVIEW_MAX_LINES && setExpandedArgs(prev => !prev)}
           >
@@ -115,20 +115,20 @@ export function ToolCallBlock(props: ToolCallBlockProps) {
             )}
             <span>参数</span>
           </button>
-          <pre className="whitespace-pre-wrap break-all font-mono text-[11px] text-[var(--color-gray-300)]">
+          <pre className="whitespace-pre-wrap break-all font-mono text-[11px] text-[var(--text-subtle)]">
             {getPreviewText(argsText, expandedArgs)}
           </pre>
         </div>
       )}
 
       {resultText && (
-        <div className={cn('rounded-md border p-2', hasError ? 'border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_40%,transparent)]' : 'border-[color-mix(in_srgb,var(--color-gray-700)_60%,transparent)] bg-[color-mix(in_srgb,var(--color-gray-950)_80%,transparent)]')}>
+        <div className={cn('rounded-[14px] border p-2.5', hasError ? 'border-[color-mix(in_srgb,var(--color-red-700)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_48%,transparent)]' : 'border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card-strong)_94%,transparent)]')}>
           <button
             type="button"
             className={cn(
               'mb-1 inline-flex items-center gap-1 text-[11px]',
-              hasError ? 'text-[var(--color-red-300)]' : 'text-[var(--color-gray-400)]',
-              resultLines > PREVIEW_MAX_LINES ? 'cursor-pointer hover:text-[var(--color-gray-100)]' : 'cursor-default',
+              hasError ? 'text-[var(--color-red-300)]' : 'text-[var(--text-faint)]',
+              resultLines > PREVIEW_MAX_LINES ? 'cursor-pointer hover:text-[var(--text-strong)]' : 'cursor-default',
             )}
             onClick={() => resultLines > PREVIEW_MAX_LINES && setExpandedResult(prev => !prev)}
           >
@@ -137,7 +137,7 @@ export function ToolCallBlock(props: ToolCallBlockProps) {
             )}
             <span>{call.phase === 'update' ? '中间结果' : hasError ? '错误信息' : '执行结果'}</span>
           </button>
-          <pre className={cn('whitespace-pre-wrap break-all font-mono text-[11px]', hasError ? 'text-[var(--color-red-200)]' : 'text-[var(--color-gray-300)]')}>
+          <pre className={cn('whitespace-pre-wrap break-all font-mono text-[11px]', hasError ? 'text-[var(--color-red-200)]' : 'text-[var(--text-subtle)]')}>
             {getPreviewText(resultText, expandedResult)}
           </pre>
         </div>

@@ -49,23 +49,23 @@ export function ConfirmModal(props: ConfirmModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-3 md:p-4"
+      className="wb-modal-backdrop"
       onPointerDown={handleBackdropPointerDown}
     >
       <div
-        className="w-full max-w-sm space-y-3 rounded-lg border border-[var(--color-gray-800)] bg-[var(--color-gray-900)] p-4 shadow-2xl"
+        className="wb-modal-card w-full max-w-sm space-y-4"
         onClick={event => event.stopPropagation()}
       >
-        <div className="text-sm font-semibold text-[var(--color-gray-100)]">{title}</div>
+        <div className="text-sm font-semibold text-[var(--text-strong)]">{title}</div>
         {description && (
-          <div className="whitespace-pre-wrap break-words text-xs text-[var(--color-gray-300)]">
+          <div className="whitespace-pre-wrap break-words text-xs leading-6 text-[var(--text-subtle)]">
             {description}
           </div>
         )}
         <div className="flex items-center justify-end gap-2 pt-1">
           <button
             type="button"
-            className="rounded-md px-2 py-1 text-xs text-[var(--color-gray-400)] hover:text-[var(--color-gray-200)]"
+            className="wb-ghost-button"
             onClick={onCancel}
           >
             {cancelText}
@@ -73,10 +73,10 @@ export function ConfirmModal(props: ConfirmModalProps) {
           <button
             type="button"
             className={cn(
-              'rounded-md px-3 py-1 text-xs text-[var(--color-white)]',
+              variant === 'danger' ? 'wb-danger-button' : 'wb-primary-button',
               variant === 'danger'
-                ? 'bg-[var(--color-red-600)] hover:bg-[var(--color-red-500)]'
-                : 'bg-[var(--color-blue-600)] hover:bg-[var(--color-blue-500)]',
+                ? ''
+                : '',
             )}
             onClick={onConfirm}
           >

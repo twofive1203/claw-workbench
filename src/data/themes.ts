@@ -4,24 +4,15 @@
  */
 export type ThemeId =
   | 'default-dark'
-  | 'one-dark-pro'
-  | 'dracula'
-  | 'catppuccin-mocha'
-  | 'nord'
-  | 'tokyo-night'
-  | 'claude'
-  | 'vercel'
-  | 'dark-matter'
-  | 'catppuccin-latte'
-  | 'github-light'
-  | 'rose-pine-dawn'
-  | 'solarized-light'
+  | 'default-dim'
+  | 'default-light'
+  | 'default-system'
 
 /**
  * 主题明暗类型。
  * @author towfive
  */
-export type ThemeAppearance = 'light' | 'dark'
+export type ThemeAppearance = 'light' | 'dark' | 'system'
 
 /**
  * 主题色板定义。
@@ -64,7 +55,7 @@ export interface ThemeDefinition {
 /**
  * 主题分组展示顺序。
  */
-export const THEME_APPEARANCE_ORDER: ThemeAppearance[] = ['light', 'dark']
+export const THEME_APPEARANCE_ORDER: ThemeAppearance[] = ['dark', 'light', 'system']
 
 /**
  * 主题分组名称映射。
@@ -72,6 +63,7 @@ export const THEME_APPEARANCE_ORDER: ThemeAppearance[] = ['light', 'dark']
 export const THEME_APPEARANCE_LABELS: Record<ThemeAppearance, string> = {
   light: '亮色主题',
   dark: '暗色主题',
+  system: '系统主题',
 }
 
 /**
@@ -85,210 +77,66 @@ export const DEFAULT_THEME_ID: ThemeId = 'default-dark'
 export const THEMES: ThemeDefinition[] = [
   {
     id: 'default-dark',
-    name: 'Default Dark',
+    name: 'Workbench Dark',
     appearance: 'dark',
-    description: '项目原始深色风格，蓝色强调更稳重。',
-    uiFont: 'Inter',
-    codeFont: 'JetBrains Mono',
+    description: '桌面工作台深色主题，冷蓝高亮与半透明层次更明显。',
+    uiFont: 'System UI',
+    codeFont: 'Cascadia Mono',
     palette: {
-      userBubble: '#2563eb',
-      background: '#030712',
-      surface: '#111827',
-      primary: '#3b82f6',
-      secondary: '#6b7280',
-      accent: '#86efac',
+      userBubble: '#4b8fff',
+      background: '#071018',
+      surface: '#111c2a',
+      primary: '#8bc3ff',
+      secondary: '#6f8198',
+      accent: '#6cd6c3',
     },
   },
   {
-    id: 'one-dark-pro',
-    name: 'One Dark Pro',
+    id: 'default-dim',
+    name: 'Workbench Dim',
     appearance: 'dark',
-    description: '柔和深灰底，经典长时间编码配色。',
-    uiFont: 'Inter',
-    codeFont: 'Fira Code',
+    description: '更柔和的灰蓝工作台，适合长时间浏览高密度信息。',
+    uiFont: 'System UI',
+    codeFont: 'Cascadia Mono',
     palette: {
-      userBubble: '#528bff',
-      background: '#282c34',
-      surface: '#2c313a',
-      primary: '#61afef',
-      secondary: '#636d83',
-      accent: '#98c379',
+      userBubble: '#5c98ff',
+      background: '#121923',
+      surface: '#1b2431',
+      primary: '#9cc8ff',
+      secondary: '#7f90a6',
+      accent: '#78d8b7',
     },
   },
   {
-    id: 'dracula',
-    name: 'Dracula',
-    appearance: 'dark',
-    description: '深紫蓝底，高饱和强调色更有个性。',
-    uiFont: 'Inter',
-    codeFont: 'JetBrains Mono',
-    palette: {
-      userBubble: '#ff79c6',
-      background: '#282a36',
-      surface: '#21222c',
-      primary: '#bd93f9',
-      secondary: '#6272a4',
-      accent: '#50fa7b',
-    },
-  },
-  {
-    id: 'catppuccin-mocha',
-    name: 'Catppuccin Mocha',
-    appearance: 'dark',
-    description: '柔和粉彩暗色，整体观感更轻盈。',
-    uiFont: 'Inter',
-    codeFont: 'Cascadia Code',
-    palette: {
-      userBubble: '#cba6f7',
-      background: '#1e1e2e',
-      surface: '#181825',
-      primary: '#89b4fa',
-      secondary: '#6c7086',
-      accent: '#a6e3a1',
-    },
-  },
-  {
-    id: 'nord',
-    name: 'Nord',
-    appearance: 'dark',
-    description: '冷调极地蓝灰，清爽克制且稳定。',
-    uiFont: 'Inter',
-    codeFont: 'Source Code Pro',
-    palette: {
-      userBubble: '#5e81ac',
-      background: '#2e3440',
-      surface: '#3b4252',
-      primary: '#88c0d0',
-      secondary: '#7d8799',
-      accent: '#a3be8c',
-    },
-  },
-  {
-    id: 'tokyo-night',
-    name: 'Tokyo Night',
-    appearance: 'dark',
-    description: '深蓝紫夜景，霓虹科技感更明显。',
-    uiFont: 'Inter',
-    codeFont: 'JetBrains Mono',
-    palette: {
-      userBubble: '#bb9af7',
-      background: '#1a1b26',
-      surface: '#24283b',
-      primary: '#7aa2f7',
-      secondary: '#565f89',
-      accent: '#2ac3de',
-    },
-  },
-  {
-    id: 'claude',
-    name: 'Claude',
-    appearance: 'dark',
-    description: '温暖橙色系，整体气质偏柔和。',
-    uiFont: 'Inter',
-    codeFont: 'JetBrains Mono',
-    palette: {
-      userBubble: '#d97706',
-      background: '#1c1917',
-      surface: '#292524',
-      primary: '#f59e0b',
-      secondary: '#78716c',
-      accent: '#a8a29e',
-    },
-  },
-  {
-    id: 'vercel',
-    name: 'Vercel',
-    appearance: 'dark',
-    description: '简约黑白品牌风格，层次非常克制。',
-    uiFont: 'Inter',
-    codeFont: 'JetBrains Mono',
-    palette: {
-      userBubble: '#0070f3',
-      background: '#000000',
-      surface: '#171717',
-      primary: '#0070f3',
-      secondary: '#737373',
-      accent: '#ffffff',
-    },
-  },
-  {
-    id: 'dark-matter',
-    name: 'Dark Matter',
-    appearance: 'dark',
-    description: '深邃黑底，紫色科技强调更突出。',
-    uiFont: 'Inter',
-    codeFont: 'JetBrains Mono',
-    palette: {
-      userBubble: '#8b5cf6',
-      background: '#050505',
-      surface: '#0a0a0a',
-      primary: '#8b5cf6',
-      secondary: '#3f3f46',
-      accent: '#a78bfa',
-    },
-  },
-  {
-    id: 'catppuccin-latte',
-    name: 'Catppuccin Latte',
+    id: 'default-light',
+    name: 'Workbench Light',
     appearance: 'light',
-    description: '奶油浅底配粉彩点缀，阅读感受轻柔。',
-    uiFont: 'Inter',
-    codeFont: 'Cascadia Code',
+    description: '浅色磨砂工作台，保留同样的面板层级与冷蓝激活态。',
+    uiFont: 'System UI',
+    codeFont: 'Cascadia Mono',
     palette: {
-      userBubble: '#7287fd',
-      background: '#eff1f5',
-      surface: '#ccd0da',
-      primary: '#1e66f5',
-      secondary: '#7c7f93',
-      accent: '#40a02b',
+      userBubble: '#377eff',
+      background: '#eef4fb',
+      surface: '#f7fbff',
+      primary: '#3e82f6',
+      secondary: '#70839d',
+      accent: '#2da78d',
     },
   },
   {
-    id: 'github-light',
-    name: 'GitHub Light',
-    appearance: 'light',
-    description: '干净白底配冷灰蓝，接近文档工作区观感。',
-    uiFont: 'Inter',
-    codeFont: 'JetBrains Mono',
-    palette: {
-      userBubble: '#0969da',
-      background: '#ffffff',
-      surface: '#f6f8fa',
-      primary: '#0969da',
-      secondary: '#6e7781',
-      accent: '#2da44e',
-    },
-  },
-  {
-    id: 'rose-pine-dawn',
-    name: 'Rosé Pine Dawn',
-    appearance: 'light',
-    description: '暖粉米色底，复古柔和，层次比较细腻。',
-    uiFont: 'Inter',
-    codeFont: 'JetBrains Mono',
-    palette: {
-      userBubble: '#56949f',
-      background: '#faf4ed',
-      surface: '#f2e9de',
-      primary: '#907aa9',
-      secondary: '#797593',
-      accent: '#d7827e',
-    },
-  },
-  {
-    id: 'solarized-light',
-    name: 'Solarized Light',
-    appearance: 'light',
-    description: '经典米黄色底，代码和文档都更耐看。',
-    uiFont: 'Inter',
-    codeFont: 'Source Code Pro',
+    id: 'default-system',
+    name: 'Follow System',
+    appearance: 'system',
+    description: '跟随系统明暗切换，始终保持工作台分层和冷蓝强调。',
+    uiFont: 'System UI',
+    codeFont: 'Cascadia Mono',
     palette: {
       userBubble: '#268bd2',
-      background: '#fdf6e3',
-      surface: '#eee8d5',
-      primary: '#268bd2',
-      secondary: '#657b83',
-      accent: '#859900',
+      background: '#eef4fb',
+      surface: '#f7fbff',
+      primary: '#3e82f6',
+      secondary: '#70839d',
+      accent: '#2da78d',
     },
   },
 ]

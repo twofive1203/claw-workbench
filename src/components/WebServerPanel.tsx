@@ -122,16 +122,18 @@ export function WebServerPanel(props: WebServerPanelProps) {
   }
 
   return (
-    <div ref={panelRef} className="flex h-full flex-col bg-[var(--color-gray-950)]">
-      {/* 顶部标题栏 */}
-      <div className="flex items-center justify-between border-b border-[var(--color-gray-800)] px-4 py-3">
-        <div className="flex items-center gap-1.5">
-          <Globe className="h-4 w-4 text-[var(--color-blue-300)]" />
-          <span className="text-sm font-medium text-[var(--color-gray-100)]">{tr('web.title')}</span>
+    <div ref={panelRef} className="flex h-full flex-col bg-[var(--surface-right-panel)] text-[var(--text-subtle)]">
+      <div className="wb-panel-header">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-[var(--color-blue-300)]" />
+            <span className="wb-panel-title">{tr('web.title')}</span>
+          </div>
+          <p className="wb-panel-subtitle mt-1">{tr('控制桌面内嵌 Web 服务并生成远程访问入口。')}</p>
         </div>
         <button
           type="button"
-          className="rounded-md p-1 text-[var(--color-gray-400)] hover:bg-[var(--color-gray-800)] hover:text-[var(--color-gray-100)]"
+          className="wb-icon-button h-8 w-8"
           onClick={onClose}
           title={tr('common.close')}
         >
@@ -139,11 +141,10 @@ export function WebServerPanel(props: WebServerPanelProps) {
         </button>
       </div>
 
-      <div className="space-y-3 overflow-y-auto px-4 py-3">
-        {/* 状态区 */}
-        <div className="rounded-lg border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-900)_60%,transparent)] p-3 text-xs">
+      <div className="space-y-4 overflow-y-auto px-4 py-4">
+        <section className="wb-card-strong rounded-[20px] p-4 text-xs">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[var(--color-gray-400)]">{tr('web.running_status')}</span>
+            <span className="text-[var(--text-faint)]">{tr('web.running_status')}</span>
             <div className="flex items-center gap-1.5">
               <span
                 className={cn(
@@ -151,13 +152,13 @@ export function WebServerPanel(props: WebServerPanelProps) {
                   isRunning ? 'bg-[var(--color-green-400)]' : 'bg-[var(--color-gray-600)]',
                 )}
               />
-              <span className={cn('font-medium', isRunning ? 'text-[var(--color-green-300)]' : 'text-[var(--color-gray-400)]')}>
+              <span className={cn('font-medium', isRunning ? 'wb-chip-success' : 'wb-chip-muted')}>
                 {isRunning ? tr('web.running') : tr('web.stopped')}
               </span>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-y-1 text-[var(--color-gray-300)]">
-            <span className="text-[var(--color-gray-500)]">{tr('web.listen_address')}</span>
+          <div className="grid grid-cols-2 gap-y-2 text-[var(--text-subtle)]">
+            <span className="text-[var(--text-faint)]">{tr('web.listen_address')}</span>
             <span className="flex items-center gap-1">
               {listenAddress ? (
                 <>
@@ -175,17 +176,16 @@ export function WebServerPanel(props: WebServerPanelProps) {
                 '-'
               )}
             </span>
-            <span className="text-[var(--color-gray-500)]">{tr('web.uptime')}</span>
+            <span className="text-[var(--text-faint)]">{tr('web.uptime')}</span>
             <span>{isRunning ? formatUptime(webServerInfo.startedAt) : '-'}</span>
           </div>
-        </div>
+        </section>
 
-        {/* 配置区 */}
-        <div className="rounded-lg border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-900)_60%,transparent)] p-3 text-xs">
-          <div className="mb-2 text-[var(--color-gray-400)]">{tr('web.service_config')}</div>
+        <section className="wb-card rounded-[20px] p-4 text-xs">
+          <div className="mb-3 text-[var(--text-faint)]">{tr('web.service_config')}</div>
           <div className="space-y-2">
             <div>
-              <label className="mb-1 block text-[var(--color-gray-500)]">{tr('web.port')}</label>
+              <label className="mb-1 block text-[var(--text-faint)]">{tr('web.port')}</label>
               <input
                 type="number"
                 min={1}
@@ -194,13 +194,13 @@ export function WebServerPanel(props: WebServerPanelProps) {
                 disabled={isRunning}
                 onChange={e => handlePortChange(e.target.value)}
                 className={cn(
-                  'w-full rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2.5 py-1.5 text-xs text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]',
+                  'wb-input',
                   isRunning && 'cursor-not-allowed opacity-50',
                 )}
               />
             </div>
             <div>
-              <label className="mb-1 block text-[var(--color-gray-500)]">{tr('web.access_token')}</label>
+              <label className="mb-1 block text-[var(--text-faint)]">{tr('web.access_token')}</label>
               <div className="flex items-center gap-1.5">
                 <input
                   type="text"
@@ -209,7 +209,7 @@ export function WebServerPanel(props: WebServerPanelProps) {
                   placeholder={tr('web.no_auth_placeholder')}
                   onChange={e => setAccessToken(e.target.value)}
                   className={cn(
-                    'flex-1 rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2.5 py-1.5 text-xs text-[var(--color-gray-200)] outline-none focus:border-[var(--color-gray-500)]',
+                    'wb-input flex-1',
                     isRunning && 'cursor-not-allowed opacity-50',
                   )}
                 />
@@ -217,10 +217,10 @@ export function WebServerPanel(props: WebServerPanelProps) {
                   type="button"
                   disabled={isRunning}
                   className={cn(
-                    'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[var(--color-gray-700)] text-[var(--color-gray-400)] transition-colors',
+                    'wb-icon-button h-9 w-9 shrink-0',
                     isRunning
                       ? 'cursor-not-allowed opacity-50'
-                      : 'hover:border-[var(--color-gray-600)] hover:text-[var(--color-gray-200)]',
+                      : '',
                   )}
                   title={tr('web.random_token')}
                   onClick={handleRandomToken}
@@ -230,19 +230,18 @@ export function WebServerPanel(props: WebServerPanelProps) {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* 操作区 */}
         <div className="flex items-center gap-2">
           {isRunning ? (
             <button
               type="button"
               disabled={isStopping}
               className={cn(
-                'inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors',
+                'wb-danger-button flex-1',
                 isStopping
                   ? 'cursor-not-allowed bg-[var(--color-gray-800)] text-[var(--color-gray-600)]'
-                  : 'bg-[var(--color-red-700)] text-[var(--color-red-100)] hover:bg-[var(--color-red-600)]',
+                  : '',
               )}
               onClick={handleStop}
             >
@@ -254,10 +253,10 @@ export function WebServerPanel(props: WebServerPanelProps) {
               type="button"
               disabled={isStarting}
               className={cn(
-                'inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors',
+                'wb-primary-button flex-1',
                 isStarting
                   ? 'cursor-not-allowed bg-[var(--color-gray-800)] text-[var(--color-gray-600)]'
-                  : 'bg-[var(--color-green-700)] text-[var(--color-green-100)] hover:bg-[var(--color-green-600)]',
+                  : 'border-[color-mix(in_srgb,var(--color-green-500)_34%,transparent)] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-green-600)_92%,transparent),color-mix(in_srgb,var(--color-green-700)_92%,transparent))]',
               )}
               onClick={handleStart}
             >
@@ -267,19 +266,17 @@ export function WebServerPanel(props: WebServerPanelProps) {
           )}
         </div>
 
-        {/* 错误提示 */}
         {error && (
-          <div className="rounded-md border border-[color-mix(in_srgb,var(--color-red-900)_70%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_40%,transparent)] px-2.5 py-1.5 text-xs text-[var(--color-red-200)]">
+          <div className="wb-card rounded-[16px] border-[color-mix(in_srgb,var(--color-red-700)_32%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_48%,transparent)] px-3 py-2 text-xs text-[var(--color-red-200)]">
             {error}
           </div>
         )}
 
-        {/* 提示区 */}
-        <div className="rounded-lg border border-dashed border-[var(--color-gray-700)] bg-[color-mix(in_srgb,var(--color-gray-950)_60%,transparent)] px-3 py-2.5 text-[11px] leading-relaxed text-[var(--color-gray-500)]">
+        <div className="wb-empty-state rounded-[18px] px-3 py-3 text-[11px] leading-relaxed">
           {tr('web.remote_hint')}
           {isRunning && fullUrl && (
             <div className="mt-1.5">
-              <span className="text-[var(--color-gray-400)]">{tr('web.full_url')}</span>
+              <span className="text-[var(--text-faint)]">{tr('web.full_url')}</span>
               <button
                 type="button"
                 className="break-all text-[var(--color-blue-400)] hover:underline"

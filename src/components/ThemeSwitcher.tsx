@@ -203,7 +203,7 @@ export function ThemeSwitcher(props: ThemeSwitcherProps) {
 
           <div
             className={cn(
-              'absolute left-0 top-full z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-[var(--app-border)] bg-gray-900/95 shadow-2xl backdrop-blur',
+              'absolute left-0 top-full z-50 mt-1.5 w-56 overflow-hidden rounded-[20px] border border-[var(--app-border)] bg-[var(--surface-popover)] shadow-[var(--shadow-panel)] backdrop-blur',
               'animate-in fade-in slide-in-from-bottom-2',
             )}
           >
@@ -225,8 +225,8 @@ export function ThemeSwitcher(props: ThemeSwitcherProps) {
                           className={cn(
                             'flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-sm transition-colors',
                             isSelected
-                              ? 'bg-blue-500/10 text-blue-100'
-                              : 'text-[var(--app-text-primary)] hover:bg-gray-900/80',
+                              ? 'bg-[var(--surface-active)] text-[var(--color-blue-200)]'
+                              : 'text-[var(--app-text-primary)] hover:bg-[var(--surface-hover)]',
                           )}
                           role="option"
                           aria-selected={isSelected}
@@ -257,7 +257,7 @@ export function ThemeSwitcher(props: ThemeSwitcherProps) {
 
           {tooltipState && (
             <div
-              className="pointer-events-none fixed z-[60] w-[248px] rounded-xl border border-[var(--app-border)] bg-gray-950 p-3 shadow-2xl"
+              className="pointer-events-none fixed z-[60] w-[248px] rounded-[18px] border border-[var(--app-border)] bg-[var(--surface-popover)] p-3 shadow-[var(--shadow-panel)]"
               style={{ top: tooltipState.top, left: tooltipState.left }}
             >
               <div className="flex items-center justify-between gap-3">

@@ -141,34 +141,34 @@ export function ExecApprovalToast(props: ExecApprovalToastProps) {
     : null
 
   return (
-    <div ref={containerRef} className={cn('w-full max-w-[380px] rounded-xl border bg-[color-mix(in_srgb,var(--color-gray-950)_95%,transparent)] p-3 shadow-2xl backdrop-blur', riskStyle.borderClass)}>
+    <div ref={containerRef} className={cn('wb-modal-card w-full max-w-[400px] p-4', riskStyle.borderClass)}>
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <ShieldAlert className="h-4 w-4 text-[var(--color-amber-300)]" />
-          <span className="text-sm font-medium text-[var(--color-gray-100)]">执行审批请求</span>
+          <span className="text-sm font-medium text-[var(--text-strong)]">执行审批请求</span>
         </div>
         {remainingMs !== null && (
-          <span className="text-[11px] text-[var(--color-gray-400)]">{toRemainSeconds(remainingMs)}</span>
+          <span className="text-[11px] text-[var(--text-faint)]">{toRemainSeconds(remainingMs)}</span>
         )}
       </div>
 
       <div className="space-y-2">
-        <div className="rounded-lg border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-900)_70%,transparent)] px-2.5 py-2 text-xs">
-          <div className="mb-1 text-[var(--color-gray-200)]">
-            <span className="text-[var(--color-gray-400)]">工具:</span>
+        <div className="wb-card rounded-[16px] px-3 py-3 text-xs">
+          <div className="mb-1 text-[var(--text-loud)]">
+            <span className="text-[var(--text-faint)]">工具:</span>
             {' '}
             {request.toolName}
           </div>
-          <div data-no-i18n className="mb-1 whitespace-pre-wrap break-all rounded border border-[var(--color-gray-800)] bg-[color-mix(in_srgb,var(--color-gray-950)_70%,transparent)] p-2 font-mono text-[11px] text-[var(--color-gray-300)]">
+          <div data-no-i18n className="mb-1 whitespace-pre-wrap break-all rounded-[14px] border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card-strong)_94%,transparent)] p-2.5 font-mono text-[11px] text-[var(--text-subtle)]">
             {previewText || '(无参数)'}
           </div>
           {request.description && (
-            <div data-no-i18n className="text-[11px] text-[var(--color-gray-400)]">{request.description}</div>
+            <div data-no-i18n className="text-[11px] text-[var(--text-faint)]">{request.description}</div>
           )}
         </div>
 
         <div className="flex items-center justify-between text-[11px]">
-          <span className="truncate text-[var(--color-gray-400)]">
+          <span className="truncate text-[var(--text-faint)]">
             会话:
             {' '}
             <span data-no-i18n>{request.sessionKey || '-'}</span>
@@ -181,7 +181,7 @@ export function ExecApprovalToast(props: ExecApprovalToastProps) {
         </div>
 
         {timeoutRatio !== null && (
-          <div className="h-1.5 overflow-hidden rounded-full bg-[var(--color-gray-800)]">
+          <div className="h-1.5 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]">
             <div
               className={cn('h-full transition-[width]', request.riskLevel === 'high' ? 'bg-[var(--color-red-500)]' : 'bg-[var(--color-blue-500)]')}
               style={{ width: `${timeoutRatio * 100}%` }}
@@ -192,7 +192,7 @@ export function ExecApprovalToast(props: ExecApprovalToastProps) {
         <div className="flex items-center justify-end gap-2 pt-1">
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-md border border-[var(--color-gray-700)] bg-[var(--color-gray-900)] px-2.5 py-1.5 text-xs text-[var(--color-gray-200)] hover:border-[var(--color-gray-600)] hover:bg-[var(--color-gray-800)]"
+            className="wb-pill-button"
             onClick={onReject}
           >
             <X className="h-3.5 w-3.5" />
@@ -201,10 +201,10 @@ export function ExecApprovalToast(props: ExecApprovalToastProps) {
           <button
             type="button"
             className={cn(
-              'inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs text-[var(--color-white)]',
+              request.riskLevel === 'high' ? 'wb-danger-button' : 'wb-primary-button',
               request.riskLevel === 'high'
-                ? 'bg-[var(--color-red-700)] hover:bg-[var(--color-red-600)]'
-                : 'bg-[var(--color-blue-600)] hover:bg-[var(--color-blue-500)]',
+                ? ''
+                : '',
             )}
             onClick={onApprove}
           >

@@ -221,24 +221,25 @@ export function ServerFormModal(props: ServerFormModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-3 md:p-4"
+      className="wb-modal-backdrop"
       onPointerDown={handleBackdropPointerDown}
     >
       <form
         ref={modalRef}
-        className="w-full max-w-md space-y-3 rounded-lg border border-gray-700 bg-gray-900 p-4 shadow-2xl"
+        className="wb-modal-card w-full max-w-[560px] space-y-4"
         onSubmit={handleSubmit}
         onClick={event => event.stopPropagation()}
       >
-        <div className="text-sm font-semibold text-gray-100">
-          {isEditMode ? '编辑服务器' : '新增服务器'}
+        <div className="space-y-1">
+          <div className="text-sm font-semibold text-[var(--text-strong)]">{isEditMode ? '编辑服务器' : '新增服务器'}</div>
+          <p className="text-xs leading-6 text-[var(--text-faint)]">填写 Gateway 连接信息，或直接粘贴完整地址快速解析。</p>
         </div>
 
         {!isEditMode && canDetectLocalServer && detectedLocalServer && (
           <div className="flex justify-end">
             <button
               type="button"
-              className="max-w-[260px] rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-right text-[11px] text-emerald-100 hover:border-emerald-400"
+              className="wb-chip-success max-w-[280px] justify-end px-3 py-2 text-right leading-5"
               onClick={handleUseDetectedLocalServer}
               title={detectedLocalServer.configPath}
             >
@@ -248,72 +249,72 @@ export function ServerFormModal(props: ServerFormModalProps) {
         )}
 
         <div className="space-y-1">
-          <label className="text-xs text-gray-400">快速录入地址</label>
+          <label className="text-xs text-[var(--text-faint)]">快速录入地址</label>
           <div className="flex items-center gap-2">
             <input
               type="text"
               value={quickUrl}
               onChange={event => setQuickUrl(event.target.value)}
               data-no-i18n
-              className="flex-1 rounded-md border border-gray-700 bg-gray-950 px-2.5 py-1.5 text-xs text-gray-200 outline-none focus:border-gray-500"
+              className="wb-input flex-1"
               placeholder="wss://localhost?token=ac04xxxxxx"
             />
             <button
               type="button"
-              className="shrink-0 rounded-md border border-gray-700 bg-gray-800 px-2 py-1.5 text-xs text-gray-200 hover:border-gray-600"
+              className="wb-mini-button shrink-0"
               onClick={handleParseQuickUrl}
             >
               解析
             </button>
           </div>
-          <div className="text-[11px] text-gray-500">
+          <div className="text-[11px] text-[var(--text-faint)]">
             支持格式：ws://host[:port]?token=xxx 或 wss://host[:port]?token=xxx
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs text-gray-400">名称</label>
+          <label className="text-xs text-[var(--text-faint)]">名称</label>
           <input
             type="text"
             value={name}
             onChange={event => setName(event.target.value)}
-            className="w-full rounded-md border border-gray-700 bg-gray-950 px-2.5 py-1.5 text-xs text-gray-200 outline-none focus:border-gray-500"
+            className="wb-input"
             placeholder="生产环境"
           />
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs text-gray-400">主机地址</label>
+          <label className="text-xs text-[var(--text-faint)]">主机地址</label>
           <input
             type="text"
             value={host}
             onChange={event => setHost(event.target.value)}
-            className="w-full rounded-md border border-gray-700 bg-gray-950 px-2.5 py-1.5 text-xs text-gray-200 outline-none focus:border-gray-500"
+            className="wb-input"
             placeholder="localhost"
           />
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs text-gray-400">端口（选填）</label>
+          <label className="text-xs text-[var(--text-faint)]">端口（选填）</label>
           <input
             type="number"
             value={port}
             onChange={event => setPort(event.target.value)}
-            className="w-full rounded-md border border-gray-700 bg-gray-950 px-2.5 py-1.5 text-xs text-gray-200 outline-none focus:border-gray-500"
+            className="wb-input"
             placeholder="默认 80/443"
           />
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs text-gray-400">协议</label>
+          <label className="text-xs text-[var(--text-faint)]">协议</label>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               className={cn(
-                'rounded-md border px-2 py-1 text-xs transition-colors',
+                'wb-pill-button rounded-[14px]',
                 protocol === 'ws'
-                  ? 'border-blue-500 bg-blue-500/20 text-blue-100'
-                  : 'border-gray-700 bg-gray-950 text-gray-300 hover:border-gray-600',
+                  ? 'is-active border-[var(--border-accent)] bg-[var(--surface-active)] text-[var(--color-blue-200)]'
+                  : '',
               )}
               onClick={() => setProtocol('ws')}
             >
@@ -322,10 +323,10 @@ export function ServerFormModal(props: ServerFormModalProps) {
             <button
               type="button"
               className={cn(
-                'rounded-md border px-2 py-1 text-xs transition-colors',
+                'wb-pill-button rounded-[14px]',
                 protocol === 'wss'
-                  ? 'border-blue-500 bg-blue-500/20 text-blue-100'
-                  : 'border-gray-700 bg-gray-950 text-gray-300 hover:border-gray-600',
+                  ? 'is-active border-[var(--border-accent)] bg-[var(--surface-active)] text-[var(--color-blue-200)]'
+                  : '',
               )}
               onClick={() => setProtocol('wss')}
             >
@@ -335,18 +336,18 @@ export function ServerFormModal(props: ServerFormModalProps) {
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs text-gray-400">Token</label>
+          <label className="text-xs text-[var(--text-faint)]">Token</label>
           <input
             type="text"
             value={token}
             onChange={event => setToken(event.target.value)}
-            className="w-full rounded-md border border-gray-700 bg-gray-950 px-2.5 py-1.5 text-xs text-gray-200 outline-none focus:border-gray-500"
+            className="wb-input"
             placeholder="请输入认证 token"
           />
         </div>
 
         {formError && (
-          <div className="rounded-md border border-red-900/70 bg-red-950/40 px-2.5 py-1.5 text-xs text-red-200">
+          <div className="wb-card rounded-[16px] border-[color-mix(in_srgb,var(--color-red-700)_32%,transparent)] bg-[color-mix(in_srgb,var(--color-red-950)_48%,transparent)] px-3 py-2 text-xs text-[var(--color-red-200)]">
             {formError}
           </div>
         )}
@@ -354,14 +355,14 @@ export function ServerFormModal(props: ServerFormModalProps) {
         <div className="flex items-center justify-end gap-2 pt-1">
           <button
             type="button"
-            className="rounded-md px-2 py-1 text-xs text-gray-400 hover:text-gray-200"
+            className="wb-ghost-button"
             onClick={onCancel}
           >
             取消
           </button>
           <button
             type="submit"
-            className="rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-500"
+            className="wb-primary-button"
           >
             确认
           </button>
