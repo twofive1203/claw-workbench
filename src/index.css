@@ -6,6 +6,13 @@
   color-scheme: dark;
   --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --font-code: 'Cascadia Mono', 'Cascadia Code', 'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
+  --wb-chat-font-size: 14px;
+  --wb-chat-line-height: 1.74;
+  --wb-chat-meta-font-size: 11px;
+  --wb-chat-code-font-size: 11px;
+  --wb-chat-code-line-height: 1.7;
+  --wb-chat-input-font-size: 14px;
+  --wb-chat-input-line-height: 1.6;
 
   --color-black: #000000;
   --color-white: #ffffff;
@@ -718,7 +725,8 @@ textarea:focus-visible {
   border-radius: 20px;
   padding: 12px 14px;
   resize: none;
-  line-height: 1.6;
+  font-size: var(--wb-chat-input-font-size);
+  line-height: var(--wb-chat-input-line-height);
 }
 
 .wb-input::placeholder,
@@ -838,7 +846,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 8px;
   color: var(--text-faint);
-  font-size: 11px;
+  font-size: var(--wb-chat-meta-font-size);
 }
 
 .wb-message-avatar {
@@ -860,6 +868,8 @@ textarea:focus-visible {
   border: 1px solid var(--border-default);
   box-shadow: var(--shadow-soft), var(--inset-highlight);
   padding: 14px 16px;
+  font-size: var(--wb-chat-font-size);
+  line-height: var(--wb-chat-line-height);
 }
 
 .wb-message-card.user {
@@ -997,7 +1007,8 @@ textarea:focus-visible {
 }
 
 .markdown {
-  line-height: 1.74;
+  font-size: var(--wb-chat-font-size);
+  line-height: var(--wb-chat-line-height);
 }
 
 .markdown p {
@@ -1047,8 +1058,8 @@ textarea:focus-visible {
   border: 1px solid var(--app-code-border);
   background: var(--app-code-bg);
   overflow-x: auto;
-  font-size: 11px;
-  line-height: 1.7;
+  font-size: var(--wb-chat-code-font-size);
+  line-height: var(--wb-chat-code-line-height);
 }
 
 .markdown pre code {

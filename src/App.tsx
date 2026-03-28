@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type DragEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ClipboardEvent, type DragEvent, type FormEvent, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Check, Copy, Download, Globe, Loader2, Menu, Paperclip, RefreshCw, Send, Type } from 'lucide-react'
@@ -40,6 +40,7 @@ const FILE_NAME_EXTRACT_RE = /<file\s+name="([^"]*)">/g
 const DEFAULT_THINKING_LEVEL_OPTIONS = ['off', 'minimal', 'low', 'medium', 'high', 'xhigh'] as const
 const TOOL_CALL_VISIBILITY_STORAGE_KEY = 'openclaw-show-tool-calls'
 const CHAT_VIEW_MODE_STORAGE_KEY = 'openclaw-chat-view-mode'
+const CHAT_FONT_SIZE_STORAGE_KEY = 'openclaw-chat-font-size'
 const MESSAGE_EXPORT_SUCCESS_RESET_MS = 2000
 const MESSAGE_ACTION_SUCCESS_RESET_MS = 2000
 const MESSAGE_ACTION_BUTTON_CLASS = 'wb-mini-button'
@@ -48,6 +49,67 @@ const SYSTEM_SENDER_NAME = 'System'
 const DEFAULT_ASSISTANT_SENDER_NAME = 'Agent'
 const MULTI_MODEL_MODE_MIN_COUNT = 2
 const MULTI_MODEL_MODE_MAX_COUNT = 4
+
+type ChatFontSizePreset = 'compact' | 'default' | 'comfortable' | 'large' | 'xlarge'
+
+const CHAT_FONT_SIZE_PRESETS: Record<
+  ChatFontSizePreset,
+  {
+    body: number
+    meta: number
+    code: number
+    input: number
+    bodyLineHeight: number
+    codeLineHeight: number
+    inputLineHeight: number
+  }
+> = {
+  compact: {
+    body: 11,
+    meta: 9.5,
+    code: 9.5,
+    input: 11,
+    bodyLineHeight: 1.62,
+    codeLineHeight: 1.56,
+    inputLineHeight: 1.5,
+  },
+  default: {
+    body: 12,
+    meta: 10,
+    code: 10,
+    input: 12,
+    bodyLineHeight: 1.66,
+    codeLineHeight: 1.6,
+    inputLineHeight: 1.54,
+  },
+  comfortable: {
+    body: 13,
+    meta: 10.5,
+    code: 10.5,
+    input: 13,
+    bodyLineHeight: 1.7,
+    codeLineHeight: 1.64,
+    inputLineHeight: 1.56,
+  },
+  large: {
+    body: 14,
+    meta: 11,
+    code: 11,
+    input: 14,
+    bodyLineHeight: 1.74,
+    codeLineHeight: 1.68,
+    inputLineHeight: 1.6,
+  },
+  xlarge: {
+    body: 15,
+    meta: 12,
+    code: 12,
+    input: 15,
+    bodyLineHeight: 1.78,
+    codeLineHeight: 1.72,
+    inputLineHeight: 1.64,
+  },
+}
 
 /**
  * 多模型卡片状态。
@@ -121,6 +183,33 @@ function saveChatViewMode(mode: ChatViewMode): void {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(CHAT_VIEW_MODE_STORAGE_KEY, mode)
+  } catch {
+    // localStorage 不可用时静默失败。
+  }
+}
+
+/**
+ * 从 localStorage 读取聊天字体大小档位。
+ */
+function loadChatFontSizePreset(): ChatFontSizePreset {
+  if (typeof window === 'undefined') return 'default'
+  try {
+    const value = window.localStorage.getItem(CHAT_FONT_SIZE_STORAGE_KEY)
+    if (value === 'compact' || value === 'comfortable' || value === 'large' || value === 'xlarge') return value
+    return 'default'
+  } catch {
+    return 'default'
+  }
+}
+
+/**
+ * 持久化聊天字体大小档位。
+ * @param preset 字体大小档位。
+ */
+function saveChatFontSizePreset(preset: ChatFontSizePreset): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(CHAT_FONT_SIZE_STORAGE_KEY, preset)
   } catch {
     // localStorage 不可用时静默失败。
   }
@@ -769,6 +858,7 @@ function App() {
   const [localMediaDataUrlMap, setLocalMediaDataUrlMap] = useState<Record<string, string>>({})
   const [showToolCallDetails, setShowToolCallDetails] = useState<boolean>(() => loadToolCallVisibilitySetting())
   const [chatViewMode, setChatViewMode] = useState<ChatViewMode>(() => loadChatViewMode())
+  const [chatFontSizePreset, setChatFontSizePreset] = useState<ChatFontSizePreset>(() => loadChatFontSizePreset())
   const [copyingMarkdownMessageId, setCopyingMarkdownMessageId] = useState<string | null>(null)
   const [copiedMarkdownMessageId, setCopiedMarkdownMessageId] = useState<string | null>(null)
   const [copyingPlainTextMessageId, setCopyingPlainTextMessageId] = useState<string | null>(null)
@@ -994,6 +1084,26 @@ function App() {
   useEffect(() => {
     saveChatViewMode(chatViewMode)
   }, [chatViewMode])
+
+  /**
+   * 同步聊天字体大小到 localStorage。
+   */
+  useEffect(() => {
+    saveChatFontSizePreset(chatFontSizePreset)
+  }, [chatFontSizePreset])
+
+  const chatTypographyStyle = useMemo<CSSProperties>(() => {
+    const preset = CHAT_FONT_SIZE_PRESETS[chatFontSizePreset]
+    return {
+      '--wb-chat-font-size': `${preset.body}px`,
+      '--wb-chat-line-height': String(preset.bodyLineHeight),
+      '--wb-chat-meta-font-size': `${preset.meta}px`,
+      '--wb-chat-code-font-size': `${preset.code}px`,
+      '--wb-chat-code-line-height': String(preset.codeLineHeight),
+      '--wb-chat-input-font-size': `${preset.input}px`,
+      '--wb-chat-input-line-height': String(preset.inputLineHeight),
+    } as CSSProperties
+  }, [chatFontSizePreset])
 
   /**
    * 打开重命名弹窗时自动聚焦输入框。
@@ -2185,23 +2295,17 @@ function App() {
   }
 
   /**
-   * 应用当前会话 model 设置。
+   * 应用当前会话模型与思考级别设置。
    */
-  const handleApplyModel = () => {
+  const handleApplySessionSettings = () => {
     void runAction(async () => {
       const nextModel = sessionModelOptions.length > 0
         ? (modelSelectRef.current?.value ?? null)
         : (modelInputRef.current?.value ?? null)
       await patchFocusedSessionModel(nextModel)
-    })
-  }
-
-  /**
-   * 应用当前会话 thinkingLevel 设置。
-   */
-  const handleApplyThinking = () => {
-    void runAction(async () => {
-      await patchFocusedSessionThinkingLevel(thinkingSelectRef.current?.value ?? null)
+      if (thinkingSelectRef.current) {
+        await patchFocusedSessionThinkingLevel(thinkingSelectRef.current?.value ?? null)
+      }
     })
   }
 
@@ -2294,7 +2398,11 @@ function App() {
   const combinedError = error ?? actionError
 
   return (
-    <div data-theme={themeId} className="wb-app-shell flex h-screen text-[var(--app-text-primary)]">
+    <div
+      data-theme={themeId}
+      className="wb-app-shell flex h-screen text-[var(--app-text-primary)]"
+      style={chatTypographyStyle}
+    >
       <AppSidebar
         sidebarOpen={sidebarOpen}
         tr={tr}
@@ -2463,11 +2571,12 @@ function App() {
               currentSessionModel={effectiveSessionModel}
               modelSelectRef={modelSelectRef}
               modelInputRef={modelInputRef}
-              onApplyModel={handleApplyModel}
+              onApplySessionSettings={handleApplySessionSettings}
               sessionThinkingLevelOptions={sessionThinkingLevelOptions}
               currentSessionThinkingLevel={currentSession?.thinkingLevel ?? ''}
               thinkingSelectRef={thinkingSelectRef}
-              onApplyThinking={handleApplyThinking}
+              chatFontSizePreset={chatFontSizePreset}
+              onChatFontSizePresetChange={setChatFontSizePreset}
               isMultiModelMode={isMultiModelMode}
               multiModelPaneCount={multiModelPaneViews.length}
               canUseMultiModelMode={canUseMultiModelMode}
@@ -2611,7 +2720,7 @@ function App() {
                         >
                           {senderBadgeText}
                         </span>
-                        <span className="text-xs font-medium text-[var(--text-subtle)]">{senderName}</span>
+                        <span className="font-medium text-[var(--text-subtle)]">{senderName}</span>
                         {messageMetaText && <span>{messageMetaText}</span>}
                       </div>
 
@@ -2833,10 +2942,21 @@ function App() {
                 <div className="wb-message-row assistant">
                   <div className="wb-message-block assistant">
                     <div className="wb-message-card assistant">
-                      <div className="mb-1 text-[11px] text-[var(--text-faint)]">
+                      <div
+                        className="mb-1 text-[var(--text-faint)]"
+                        style={{ fontSize: 'var(--wb-chat-meta-font-size)' }}
+                      >
                         {currentAgentDisplayName ?? DEFAULT_ASSISTANT_SENDER_NAME}
                       </div>
-                      <span className="typing-dots text-sm text-[var(--text-muted)]">{tr('思考中')}</span>
+                      <span
+                        className="typing-dots text-[var(--text-muted)]"
+                        style={{
+                          fontSize: 'var(--wb-chat-font-size)',
+                          lineHeight: 'var(--wb-chat-line-height)',
+                        }}
+                      >
+                        {tr('思考中')}
+                      </span>
                     </div>
                   </div>
                 </div>
