@@ -735,6 +735,7 @@ const EXACT_TRANSLATIONS: Record<string, string> = {
   '亮色主题': 'Light Themes',
   '暗色主题': 'Dark Themes',
   '选择主题': 'Choose theme',
+  'GitHub 风格亮色主题，白底、浅灰边框与蓝色主强调更接近 GitHub Light。': 'GitHub-inspired light theme with white surfaces, soft gray borders, and familiar GitHub blue accents.',
   '当前': 'Current',
   '选择服务器': 'Select server',
   '请先选择服务器': 'Select a server first',

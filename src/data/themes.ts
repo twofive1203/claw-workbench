@@ -6,6 +6,7 @@ export type ThemeId =
   | 'default-dark'
   | 'default-dim'
   | 'default-light'
+  | 'github-light'
   | 'default-system'
 
 /**
@@ -121,6 +122,22 @@ export const THEMES: ThemeDefinition[] = [
       primary: '#3e82f6',
       secondary: '#70839d',
       accent: '#2da78d',
+    },
+  },
+  {
+    id: 'github-light',
+    name: 'GitHub Light',
+    appearance: 'light',
+    description: 'GitHub 风格亮色主题，白底、浅灰边框与蓝色主强调更接近 GitHub Light。',
+    uiFont: 'GitHub Sans',
+    codeFont: 'ui-monospace',
+    palette: {
+      userBubble: '#0969da',
+      background: '#f6f8fa',
+      surface: '#ffffff',
+      primary: '#0969da',
+      secondary: '#656d76',
+      accent: '#2da44e',
     },
   },
   {

@@ -264,6 +264,91 @@
   --app-overlay: rgb(28 46 69 / 0.24);
 }
 
+[data-theme='github-light'] {
+  color-scheme: light;
+  --font-ui: 'GitHub Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-code: ui-monospace, 'SFMono-Regular', 'Cascadia Mono', 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  --color-black: #000000;
+  --color-white: #ffffff;
+
+  --color-gray-100: #1f2328;
+  --color-gray-200: #32383f;
+  --color-gray-300: #57606a;
+  --color-gray-400: #656d76;
+  --color-gray-500: #8c959f;
+  --color-gray-600: #afb8c1;
+  --color-gray-700: #d0d7de;
+  --color-gray-800: #eaeef2;
+  --color-gray-900: #ffffff;
+  --color-gray-950: #f6f8fa;
+
+  --color-blue-100: #0a3069;
+  --color-blue-200: #0550ae;
+  --color-blue-300: #0969da;
+  --color-blue-400: #0969da;
+  --color-blue-500: #218bff;
+  --color-blue-600: #54aeff;
+  --color-blue-700: #80ccff;
+  --color-blue-800: #b6e3ff;
+  --color-blue-900: #ddf4ff;
+  --color-blue-950: #f4faff;
+
+  --color-red-100: #82071e;
+  --color-red-200: #a40e26;
+  --color-red-300: #cf222e;
+  --color-red-400: #fa4549;
+  --color-red-500: #cf222e;
+  --color-red-600: #ff8182;
+  --color-red-700: #ffaba8;
+  --color-red-800: #ffcecb;
+  --color-red-900: #ffebe9;
+  --color-red-950: #fff5f5;
+
+  --color-amber-100: #6c3900;
+  --color-amber-200: #7d4e00;
+  --color-amber-300: #9a6700;
+  --color-amber-500: #bf8700;
+  --color-amber-600: #d4a72c;
+  --color-amber-700: #eac54f;
+  --color-amber-900: #fff1a8;
+  --color-amber-950: #fffbdd;
+
+  --color-green-100: #0f5323;
+  --color-green-200: #116329;
+  --color-green-300: #1a7f37;
+  --color-green-400: #2da44e;
+  --color-green-500: #2da44e;
+  --color-green-600: #4ac26b;
+  --color-green-700: #6fdd8b;
+
+  --color-yellow-200: #7d4e00;
+  --color-yellow-300: #9a6700;
+  --color-yellow-700: #eac54f;
+  --color-yellow-900: #fff1a8;
+  --color-yellow-950: #fffbdd;
+
+  --color-emerald-200: #1a7f37;
+  --color-emerald-500: #2da44e;
+  --color-emerald-700: #6fdd8b;
+  --color-emerald-900: #dafbe1;
+  --color-emerald-950: #f4fff7;
+
+  --color-orange-200: #bc4c00;
+  --color-orange-500: #d18616;
+  --color-orange-700: #ffd8b5;
+
+  --color-pink-100: #7d2457;
+  --color-pink-400: #bf4b8a;
+  --color-pink-900: #ffe6f3;
+
+  --color-purple-300: #8250df;
+
+  --app-user-bubble: linear-gradient(135deg, rgba(9, 105, 218, 0.98), rgba(5, 80, 174, 0.98));
+  --app-user-bubble-text: #ffffff;
+  --app-overlay: rgb(31 35 40 / 0.18);
+}
+
 @media (prefers-color-scheme: light) {
   [data-theme='default-system'] {
     color-scheme: light;
