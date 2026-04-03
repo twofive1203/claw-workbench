@@ -124,6 +124,16 @@ interface MultiModelPaneState {
 }
 
 /**
+ * 多模型卡片构建结果。
+ * @param panes 生成后的卡片列表。
+ * @param newSessionKeys 本次新创建的会话 key 列表。
+ */
+interface MultiModelPaneBuildResult {
+  panes: MultiModelPaneState[]
+  newSessionKeys: string[]
+}
+
+/**
  * 构建助手消息的通知去重签名。
  * @param message 助手消息。
  */
@@ -621,6 +631,15 @@ function resolveAgentDefaultModel(config: OpenClawConfig, agentId: string | null
 }
 
 /**
+ * 从 OpenClaw 配置中解析默认 thinkingLevel。
+ * @param config 当前配置对象。
+ */
+function resolveConfigDefaultThinkingLevel(config: OpenClawConfig): string {
+  const defaultThinkingLevel = config.agents?.defaults?.thinkingDefault?.trim()
+  return defaultThinkingLevel || 'medium'
+}
+
+/**
  * 解析会话 thinkingLevel 下拉候选项。
  * @param sessionThinkingLevel 当前会话 thinkingLevel。
  */
@@ -928,9 +947,9 @@ function App() {
     sendMessageToSession,
     createAgent,
     createDetachedSession,
-    resetFocusedSession,
     deleteSession,
     patchSessionModel,
+    patchSessionThinkingLevel,
     patchFocusedSessionModel,
     patchFocusedSessionThinkingLevel,
     renameSession,
@@ -997,13 +1016,21 @@ function App() {
     () => currentSession?.model ?? resolveAgentDefaultModel(configStore.config, focusedAgentId),
     [currentSession?.model, configStore.config, focusedAgentId],
   )
+  const effectiveDefaultThinkingLevel = useMemo(
+    () => resolveConfigDefaultThinkingLevel(configStore.config),
+    [configStore.config],
+  )
+  const effectiveSessionThinkingLevel = useMemo(
+    () => currentSession?.thinkingLevel ?? effectiveDefaultThinkingLevel,
+    [currentSession?.thinkingLevel, effectiveDefaultThinkingLevel],
+  )
   const sessionModelOptions = useMemo(
     () => resolveSessionModelOptions(configStore.config, focusedAgentId, effectiveSessionModel),
     [configStore.config, focusedAgentId, effectiveSessionModel],
   )
   const sessionThinkingLevelOptions = useMemo(
-    () => resolveSessionThinkingLevelOptions(currentSession?.thinkingLevel),
-    [currentSession?.thinkingLevel],
+    () => resolveSessionThinkingLevelOptions(effectiveSessionThinkingLevel),
+    [effectiveSessionThinkingLevel],
   )
   const sessionSettingTags = useMemo(
     () => resolveSessionSettingTags(currentSession, tr),
@@ -1065,6 +1092,17 @@ function App() {
     () => subagentTasks.filter(item => item.status === 'running').length,
     [subagentTasks],
   )
+
+  /**
+   * 为新会话写入默认思考级别，避免界面显示默认值但服务端仍回落到 low。
+   * @param sessionKey 新会话 key。
+   */
+  const applyDefaultThinkingLevelToSession = useCallback(async (sessionKey: string) => {
+    const trimmedSessionKey = sessionKey.trim()
+    if (!trimmedSessionKey) return
+    await patchSessionThinkingLevel(trimmedSessionKey, effectiveDefaultThinkingLevel)
+  }, [effectiveDefaultThinkingLevel, patchSessionThinkingLevel])
+
   const supportsLogsTail = useMemo(() => {
     const methods = gatewayHealth?.features?.methods
     if (!methods || methods.length === 0) return true
@@ -1237,8 +1275,13 @@ function App() {
     reuseExisting: boolean,
     anchorSessionKey?: string | null,
     preferredModels?: string[],
-  ): MultiModelPaneState[] => {
-    if (!focusedAgentId) return []
+  ): MultiModelPaneBuildResult => {
+    if (!focusedAgentId) {
+      return {
+        panes: [],
+        newSessionKeys: [],
+      }
+    }
 
     const safeCount = Math.min(
       MULTI_MODEL_MODE_MAX_COUNT,
@@ -1254,13 +1297,19 @@ function App() {
       })()
       : []
 
-    return Array.from({ length: safeCount }, (_, index) => {
+    const newSessionKeys: string[] = []
+    const panes = Array.from({ length: safeCount }, (_, index) => {
       const previousPane = previousPanes[index]
       const shouldUseAnchorSession = Boolean(anchorSessionKey) && index === 0 && !reuseExisting
       const preferredModel = Array.isArray(preferredModels) ? (preferredModels[index] ?? undefined) : undefined
+      const isNewSession = !shouldUseAnchorSession && !previousPane
       const sessionKey = shouldUseAnchorSession
         ? (anchorSessionKey as string)
         : (previousPane?.sessionKey ?? createDetachedSession(focusedAgentId))
+
+      if (isNewSession) {
+        newSessionKeys.push(sessionKey)
+      }
 
       return {
         id: previousPane?.id ?? buildMultiModelPaneId(),
@@ -1272,22 +1321,34 @@ function App() {
         ),
       }
     })
+    return {
+      panes,
+      newSessionKeys,
+    }
   }, [createDetachedSession, currentSession?.model, focusedAgentId, focusedSessionKey, multiModelPanes, sessionModelOptions])
 
   /**
-   * 批量应用多模型卡片的模型设置。
+   * 批量应用多模型卡片的模型设置，并为新会话补齐默认思考级别。
    * @param panes 目标卡片列表。
+   * @param newSessionKeys 本次新创建的会话 key 列表。
    */
-  const applyMultiModelPaneModels = useCallback(async (panes: MultiModelPaneState[]) => {
+  const applyMultiModelPaneSettings = useCallback(async (
+    panes: MultiModelPaneState[],
+    newSessionKeys: string[],
+  ) => {
+    const newSessionKeySet = new Set(newSessionKeys)
     const results = await Promise.allSettled(panes.map(async (pane) => {
       await patchSessionModel(pane.sessionKey, pane.model || null)
+      if (newSessionKeySet.has(pane.sessionKey)) {
+        await applyDefaultThinkingLevelToSession(pane.sessionKey)
+      }
     }))
 
     const failedCount = results.filter((item) => item.status === 'rejected').length
     if (failedCount > 0) {
       throw new Error(`多模型模式初始化失败，共 ${failedCount} 个对话未完成模型设置`)
     }
-  }, [patchSessionModel])
+  }, [applyDefaultThinkingLevelToSession, patchSessionModel])
 
   /**
    * 修改多模型弹窗中的对话数量。
@@ -1376,7 +1437,7 @@ function App() {
 
     setSingleModeSessionKeyBeforeMultiModel(focusedSessionKey)
     setMultiModelCount(nextCount)
-    const nextPanes = buildMultiModelPanes(nextCount, false, null, nextModels)
+    const { panes: nextPanes, newSessionKeys } = buildMultiModelPanes(nextCount, false, null, nextModels)
     setMultiModelPanes(nextPanes)
     setIsMultiModelMode(true)
     closeMultiModelConfirmModal()
@@ -1387,7 +1448,7 @@ function App() {
     }
 
     void runAction(async () => {
-      await applyMultiModelPaneModels(nextPanes)
+      await applyMultiModelPaneSettings(nextPanes, newSessionKeys)
     })
   }
 
@@ -1535,12 +1596,12 @@ function App() {
     if (firstPaneSessionKey === focusedSessionKey && multiModelPanes.length === multiModelCount) return
 
     const shouldReuseExisting = true
-    const nextPanes = buildMultiModelPanes(multiModelCount, shouldReuseExisting)
+    const { panes: nextPanes, newSessionKeys } = buildMultiModelPanes(multiModelCount, shouldReuseExisting)
     setMultiModelPanes(nextPanes)
     void runAction(async () => {
-      await applyMultiModelPaneModels(nextPanes)
+      await applyMultiModelPaneSettings(nextPanes, newSessionKeys)
     })
-  }, [applyMultiModelPaneModels, buildMultiModelPanes, focusedSessionKey, isMultiModelExitProcessing, isMultiModelMode, multiModelCount, multiModelPanes, runAction])
+  }, [applyMultiModelPaneSettings, buildMultiModelPanes, focusedSessionKey, isMultiModelExitProcessing, isMultiModelMode, multiModelCount, multiModelPanes, runAction])
 
   /**
    * 将 Markdown 链接交给系统默认浏览器打开，避免当前窗口被跳转。
@@ -2295,6 +2356,23 @@ function App() {
   }
 
   /**
+   * 新建当前 Agent 会话，并立即写入默认思考级别。
+   */
+  const handleCreateNewSession = () => {
+    if (!focusedAgentId) return
+
+    closeSidebarDrawer()
+    void runAction(async () => {
+      const newSessionKey = createDetachedSession(focusedAgentId)
+      try {
+        await applyDefaultThinkingLevelToSession(newSessionKey)
+      } finally {
+        focusSession(newSessionKey)
+      }
+    })
+  }
+
+  /**
    * 应用当前会话模型与思考级别设置。
    */
   const handleApplySessionSettings = () => {
@@ -2448,10 +2526,7 @@ function App() {
         onRefreshSessions={() => {
           if (focusedAgentId) void runAction(() => refreshSessions(focusedAgentId))
         }}
-        onResetFocusedSession={() => {
-          closeSidebarDrawer()
-          void runAction(resetFocusedSession)
-        }}
+        onResetFocusedSession={handleCreateNewSession}
         isLoadingSessions={isLoadingSessions}
         sessions={sessions}
         focusedSessionKey={focusedSessionKey}
@@ -2573,7 +2648,7 @@ function App() {
               modelInputRef={modelInputRef}
               onApplySessionSettings={handleApplySessionSettings}
               sessionThinkingLevelOptions={sessionThinkingLevelOptions}
-              currentSessionThinkingLevel={currentSession?.thinkingLevel ?? ''}
+              currentSessionThinkingLevel={effectiveSessionThinkingLevel}
               thinkingSelectRef={thinkingSelectRef}
               chatFontSizePreset={chatFontSizePreset}
               onChatFontSizePresetChange={setChatFontSizePreset}

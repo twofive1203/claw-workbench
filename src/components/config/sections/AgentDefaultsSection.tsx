@@ -177,7 +177,7 @@ export function AgentDefaultsSection(props: AgentDefaultsSectionProps) {
           error={findIssueByPath(issues, 'agents.defaults.thinkingDefault') ?? null}
         >
           <SelectField
-            value={defaults.thinkingDefault ?? ''}
+            value={defaults.thinkingDefault ?? 'medium'}
             options={THINKING_OPTIONS}
             placeholder="请选择 thinking 默认值"
             onChange={nextValue => {

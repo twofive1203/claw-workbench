@@ -395,6 +395,33 @@ export function useOpenClaw(url: string, options?: UseOpenClawOptions) {
   }, [])
 
   /**
+   * 在本地会话摘要中写入 thinkingLevel，避免界面显示落后于服务端。
+   * @param sessionKey 会话 key。
+   * @param thinkingLevel 目标思考级别；undefined 表示清空本地覆盖。
+   */
+  const setSessionThinkingLevelLocal = useCallback((sessionKey: string, thinkingLevel?: string) => {
+    const agentId = parseAgentIdFromSessionKey(sessionKey)
+    if (!agentId) return
+
+    setSessionsByAgent((prev) => {
+      const current = prev[agentId] ?? []
+      const index = current.findIndex(item => item.key === sessionKey)
+      if (index < 0) return prev
+      const target = current[index]
+      if (target.thinkingLevel === thinkingLevel) return prev
+      const nextList = [...current]
+      nextList[index] = {
+        ...target,
+        thinkingLevel,
+      }
+      return {
+        ...prev,
+        [agentId]: nextList,
+      }
+    })
+  }, [])
+
+  /**
    * 确保会话存在于当前 agent 会话列表。
    * @param sessionKey 会话 key。
    */
@@ -1464,6 +1491,26 @@ export function useOpenClaw(url: string, options?: UseOpenClawOptions) {
   }, [callRpc, refreshSessions])
 
   /**
+   * 修改指定会话思考级别。
+   * @param sessionKey 目标会话 key。
+   * @param thinkingLevel 思考级别，为 null 表示清空覆盖。
+   */
+  const patchSessionThinkingLevel = useCallback(async (sessionKey: string, thinkingLevel: string | null) => {
+    const trimmedSessionKey = sessionKey.trim()
+    if (!trimmedSessionKey) return
+
+    const normalizedThinkingLevel = thinkingLevel && thinkingLevel.trim() ? thinkingLevel.trim() : null
+
+    await callRpc('sessions.patch', {
+      key: trimmedSessionKey,
+      thinkingLevel: normalizedThinkingLevel,
+    })
+    setSessionThinkingLevelLocal(trimmedSessionKey, normalizedThinkingLevel ?? undefined)
+    const agentId = parseAgentIdFromSessionKey(trimmedSessionKey)
+    if (agentId) await refreshSessions(agentId)
+  }, [callRpc, refreshSessions, setSessionThinkingLevelLocal])
+
+  /**
    * 修改当前会话模型。
    * @param model 模型名称，为 null 表示清空覆盖。
    */
@@ -1480,13 +1527,8 @@ export function useOpenClaw(url: string, options?: UseOpenClawOptions) {
   const patchFocusedSessionThinkingLevel = useCallback(async (thinkingLevel: string | null) => {
     const sessionKey = focusedSessionKeyRef.current
     if (!sessionKey) return
-    await callRpc('sessions.patch', {
-      key: sessionKey,
-      thinkingLevel: thinkingLevel && thinkingLevel.trim() ? thinkingLevel.trim() : null,
-    })
-    const agentId = parseAgentIdFromSessionKey(sessionKey)
-    if (agentId) await refreshSessions(agentId)
-  }, [callRpc, refreshSessions])
+    await patchSessionThinkingLevel(sessionKey, thinkingLevel)
+  }, [patchSessionThinkingLevel])
 
   /**
    * 重命名指定会话。
@@ -2288,6 +2330,7 @@ export function useOpenClaw(url: string, options?: UseOpenClawOptions) {
     resetFocusedSession,
     deleteSession,
     patchSessionModel,
+    patchSessionThinkingLevel,
     patchFocusedSessionModel,
     patchFocusedSessionThinkingLevel,
     renameSession,
