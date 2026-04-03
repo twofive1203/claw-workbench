@@ -201,14 +201,11 @@ export function ServerSelector(props: ServerSelectorProps) {
         <div className="relative">
           <button
             type="button"
-            className="wb-card flex w-full items-center gap-2 rounded-[18px] px-3 py-3 text-left text-xs text-[var(--text-loud)]"
+            className="wb-card flex min-h-[48px] w-full items-center gap-2 rounded-[18px] px-3 py-2 text-left text-xs text-[var(--text-loud)]"
             onClick={() => setIsDropdownOpen(prev => !prev)}
           >
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium" data-no-i18n>{activeServer?.name ?? tr('server.none_selected')}</div>
-              <div className="truncate text-[11px] text-[var(--text-faint)]">
-                {activeServer?.host ?? tr('server.select_first')}
-              </div>
             </div>
             <ChevronDown
               className={cn('h-4 w-4 text-[var(--text-faint)] transition-transform', isDropdownOpen && 'rotate-180')}
@@ -221,7 +218,7 @@ export function ServerSelector(props: ServerSelectorProps) {
                 <div
                   key={server.id}
                   className={cn(
-                    'group flex items-center gap-1 rounded-[14px] border px-2 py-2',
+                    'group flex items-center gap-1 rounded-[14px] border px-2 py-1.5',
                     activeServerId === server.id
                       ? 'border-[var(--border-accent)] bg-[var(--surface-active)]'
                       : 'border-transparent hover:border-[var(--border-default)] hover:bg-[var(--surface-hover)]',
@@ -236,9 +233,6 @@ export function ServerSelector(props: ServerSelectorProps) {
                     }}
                   >
                     <div className="truncate text-xs text-[var(--text-loud)]" data-no-i18n>{server.name}</div>
-                    <div className="truncate text-[11px] text-[var(--text-faint)]">
-                      {server.protocol}://{server.host}
-                    </div>
                   </button>
                   {!isReadonly && (
                     <>
